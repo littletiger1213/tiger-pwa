@@ -1001,14 +1001,18 @@
 
   // ---------- seed examples ----------
   function seed(){
-    var t=todayStr();
-    state.todos=[
-      {id:uid(),type:'todo',title:'提交 Q3 运营复盘报告',priority:'高',due:addDays(t,-3),done:false,doneDate:null,deferred:0,createdAt:t,_seed:true},
-      {id:uid(),type:'todo',title:'和产品确认需求评审时间',priority:'中',due:t,done:false,doneDate:null,deferred:0,createdAt:t,_seed:true},
-      {id:uid(),type:'todo',title:'准备客户回访提纲',priority:'低',due:addDays(t,1),done:false,doneDate:null,deferred:0,createdAt:t,_seed:true},
-      {id:uid(),type:'todo',title:'撰写下半年业务规划',priority:'高',due:addDays(t,7),done:false,doneDate:null,deferred:0,createdAt:t,_seed:true},
-      {id:uid(),type:'schedule',title:'团队周会',datetime:t+'T20:00',location:'线上',reminders:[15],createdAt:t,_seed:true}
-    ];
+    state.todos=[];
+  }
+
+  // 一次性清理：移除内置示例数据（带 _seed 标记），仅执行一次，之后不再触发
+  function clearSeedOnce(){
+    try{
+      if(localStorage.getItem('wb_seed_cleared_v1')) return;
+      var before=(state.todos||[]).length;
+      state.todos=(state.todos||[]).filter(function(it){ return !it._seed; });
+      localStorage.setItem('wb_seed_cleared_v1','1');
+      if(state.todos.length!==before){ saveLocal(); }
+    }catch(e){}
   }
 
   // ---------- init ----------
@@ -1111,6 +1115,7 @@
 
 
   function afterLoad(){
+    clearSeedOnce();
     bindEvents();
     renderInfo();
     renderAll();
