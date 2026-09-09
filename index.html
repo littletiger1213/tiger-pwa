@@ -237,8 +237,8 @@
   .backup-banner .tx b{color:#b45309}
 
   .hide{display:none!important}
-  /* 主屏幕隐藏：离线模式状态、导出备份、导入 */
-  #sync, #btnExport, #btnImport{display:none!important}
+  /* 主屏幕仅隐藏同步状态（离线托管下无意义）；导出备份/导入必须保留，是数据兜底出口 */
+  #sync{display:none!important}
 
   /* mobile */
   .bottombar{display:none}
@@ -465,6 +465,8 @@
   var LS_REM = "wb_hutou_rem_v1";
   var LS_WX = "wb_hutou_wx_v1";
   var LS_LAYOUT = "wb_hutou_layout_v1";
+  var LS_BKA = "wb_bk_auto_v1";
+  var AUTO_BK_MS = 24*3600*1000;
   var NEWS_LAYOUT = (function(){ try{ return localStorage.getItem(LS_LAYOUT)||'row'; }catch(e){ return 'row'; } })();
 
   // ---------- helpers ----------
@@ -1116,6 +1118,7 @@
 
   function afterLoad(){
     clearSeedOnce();
+    autoBackupIfNeeded();
     bindEvents();
     renderInfo();
     renderAll();
@@ -1506,6 +1509,64 @@
       fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({msgtype:'text', text:{content:text}})}).catch(function(){});
     }catch(e){}
   }
+
+  // ---------- 自动备份到企业微信（异地留存，换设备可恢复） ----------
+  // 说明：iOS 后台会冻结网页 JS、且离线托管无服务端，无法实现"到点自动跑"；
+  //       改为"每次打开 App 时补做"——距上次备份超过 AUTO_BK_MS 就自动推一份。
+  function bkByteLen(s){
+    try{ return new TextEncoder().encode(s||'').length; }catch(e){ return (s||'').length*3; }
+  }
+  function buildBackupText(items){
+    var d=new Date();
+    var todos=items.filter(function(i){ return i.type==='todo'; });
+    var sds=items.filter(function(i){ return i.type==='schedule'; });
+    var out=[];
+    out.push('🗂 虎头虎脑工作台 · 自动备份');
+    out.push('时间：'+todayStr()+' '+pad(d.getHours())+':'+pad(d.getMinutes()));
+    out.push('共 '+items.length+' 条（待办 '+todos.length+' / 日程 '+sds.length+'）');
+    if(todos.length){
+      out.push(''); out.push('【待办】');
+      todos.forEach(function(i,n){
+        out.push((n+1)+'. ['+(i.priority||'中')+'] '+i.title+' ｜ 截止 '+(i.due||'无')+' ｜ '+(i.done?'已完成':'未完成'));
+      });
+    }
+    if(sds.length){
+      out.push(''); out.push('【日程】');
+      sds.forEach(function(i,n){
+        var dt=(i.datetime||'').replace('T',' ');
+        out.push((n+1)+'. '+i.title+' ｜ '+dt+(i.location?(' ｜ @'+i.location):''));
+      });
+    }
+    return out.join('\n');
+  }
+  // 企业微信文本消息上限 2048 字节，超长自动分片
+  function pushWechatChunked(text){
+    var LIMIT=1700, parts=[], cur='';
+    (text||'').split('\n').forEach(function(ln){
+      if(cur && bkByteLen(cur)+bkByteLen(ln)+1 > LIMIT){ parts.push(cur); cur=''; }
+      cur += (cur? '\n':'')+ln;
+    });
+    if(cur) parts.push(cur);
+    parts.forEach(function(p,i){
+      var head = parts.length>1 ? ('（'+(i+1)+'/'+parts.length+'）\n') : '';
+      pushWechat(head+p);
+    });
+    return parts.length;
+  }
+  function autoBackupIfNeeded(){
+    try{
+      var url=(localStorage.getItem(LS_WX)||'').trim();
+      if(!url) return;
+      var items=allItems();
+      if(!items || !items.length) return;
+      var last=parseInt(localStorage.getItem(LS_BKA)||'0',10);
+      var now=Date.now();
+      if(last && (now-last) < AUTO_BK_MS) return;
+      var n=pushWechatChunked(buildBackupText(items));
+      localStorage.setItem(LS_BKA, String(now));
+      try{ toast('已自动备份到企业微信（'+(n>1? n+'条消息' : '1条消息')+'）'); }catch(e){}
+    }catch(e){}
+  }
   function notifyTodo(t, code){
     var label=remLabel(code);
     toastConfirm('📋 待办提醒：'+t.title+(label?('（'+label+'）'):''), function(){
@@ -1538,7 +1599,7 @@
     loadFired(); checkReminders();
     if(typeof setInterval==='function') setInterval(checkReminders, 30000);
     try{
-      document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFired(); checkReminders(); refreshNotifStatus(); } });
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFired(); checkReminders(); refreshNotifStatus(); autoBackupIfNeeded(); } });
       window.addEventListener('pageshow', function(){ loadFired(); checkReminders(); });
     }catch(e){}
     refreshNotifStatus();
