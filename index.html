@@ -224,9 +224,11 @@
 
   .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
 
-  /* 萌虎日趣（宽度与其它卡片一致） */
+  /* 萌虎好❤情（宽度与其它卡片一致） */
   .fun-card{padding:18px}
   .fun-body{font-size:15px;line-height:1.75;padding:2px 2px}
+  .fun-a{padding:3px 0}
+  .fun-a+.fun-a{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(0,0,0,.09)}
 
   /* toast & banner */
   .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#0f2e2b;color:#fff;padding:11px 20px;border-radius:24px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw;text-align:center}
@@ -329,9 +331,9 @@
         <button data-page-node-id="e3NGv3wRRyWp1ozBDXnBSz" class="btn line sm" id="bkDismiss"><!--pnid:myz4G4ggvvWZTTYRGnro6x-->知道了</button>
       </div>
 
-      <!--pnid:rwPZB9B4jbbnJ0pSbojagi--><!-- 萌虎日趣 -->
+      <!--pnid:rwPZB9B4jbbnJ0pSbojagi--><!-- 萌虎好❤情 -->
       <div data-page-node-id="JlINeZky2ZjbTqCRpzU9BW" class="card fun-card" id="sec-fun">
-        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->萌虎日趣</h2><span class="spacer"></span><button class="btn line sm" id="funNext">换一条</button></div>
+        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->萌虎好❤情</h2><span class="spacer"></span><button class="btn line sm" id="funNext">换一条</button></div>
         <div data-page-node-id="R7hhwCsjJGAKoudyCh2ufs" class="fun-body" id="funBody"></div>
       </div>
 
@@ -1042,122 +1044,146 @@
     }
   }
 
-  // ---------- 萌虎日趣：关注当天热点趣事，联网实时抓取一条（≤100字），离线回退内置 ----------
-  var JOKES=[
-    '老虎去面试，说特长是虎口拔牙、虎虎生风。',
-    '为什么老虎不炒股？怕熊市，更怕被割成虎皮。',
-    '老虎上班第一句：「虎」报！今天虎力全开。',
-    '老板让老虎写周报，写了一页虎字，叫虎头蛇尾。',
-    '老虎和猫咪比可爱，平局，因为都喵了一下。',
-    '老虎存钱，柜员说：虎先生，余额已虎涨。',
-    '老虎的电脑不死机，因为装了虎卫杀毒。',
-    '老虎减肥秘诀：我不是胖，是虎威。',
-    '老虎开会不迟到，因为有虎时表，准得吓人。',
-    '老虎最怕听：虎落平阳被犬欺。',
-    '老虎投资稳，只买虎龙牌，不追涨杀跌。',
-    '老虎许愿：愿天下没有难做的虎，也没难赚的钱。',
-    '老虎打字慢，爪子太大，总按到回车。',
-    '老虎最爱Excel，因为可以一把排序。',
-    '老虎不爱加班，深夜就变夜老虎了。',
-    '老虎点外卖：来份虎皮蛋糕，多放奶油。',
-    '老虎相亲，对方吓跑：你这虎，太虎了。',
-    '老虎座右铭：不鸣则已，一鸣虎人。',
-    '老虎从不失眠，每天虎啸着就睡着了。',
-    '老虎学编程第一行：print("虎年大吉")',
-    '老虎感冒诊断：虎流感，多喝热水少加班。',
-    '老虎的钱包空，因为钱都虎到股市里去了。',
-    '老虎最怕英语听力，只听得懂 tiger。',
-    '老虎中年危机：从山大王变成打工人。',
-    '老虎爱看财经新闻，想知道虎略财讯涨没涨。',
-    '老虎戒烟失败：抽的不是烟，是虎气。',
-    '生活就像老虎机，不投币也会被按停。',
-    '加班到深夜才发现，月亮比我加班还圆。',
-    '早起的鸟儿有虫吃，晚起的虎虎有床躺。',
-    '钱包和老虎一样，看着威风，其实很空。',
-    '老板说"简单加个班"，老虎信了，结果通宵。',
-    '老虎口头禅：别慌，让子弹飞一会儿。',
-    '虎年许愿：工资虎涨，烦恼虎降。',
-    '老虎学英语，只会说：tiger, tiger, 真tiger。',
-    '老虎最爱的运动：虎扑——扑空。',
-    '老虎的钱包说：我也想虎虎生风，可我没风。',
-    '打工人如虎，早起如虎啸，下班如虎趴。',
-    '老虎最怕周一：虎威全无，只剩虎躯一震。',
-    '老虎的减肥计划：明天开始，永远明天。',
-    '老虎炒股心得：别人贪婪我……跑了。'
+  // ---------- 萌虎好❤情：每天动态更新 1~2 句正能量短句 ----------
+  // 策略：内置精选语料保证「每天都有、质量可控、离线可用」；
+  //       联网时再抓「每日一言」补充第一条，但必须通过正能量筛选——宁可不显示，也不把丧句放进来。
+  var POS_QUOTES=[
+    '今天做一件让未来的自己感谢你的小事。',
+    '慢慢来，比较快。',
+    '不必很厉害才能开始，但要开始了才会很厉害。',
+    '把今天过好，明天自然不会太差。',
+    '你不需要很完美，只需要很真实。',
+    '走慢一点没关系，别停下就好。',
+    '努力的意义，是让未来的自己有得选。',
+    '完成，比完美更重要。',
+    '先做五分钟，状态会自己找上门。',
+    '每天进步一点点，一年就是三十七倍。',
+    '种一棵树最好的时间是十年前，其次是现在。',
+    '方向对了，就不怕路远。',
+    '你现在做的事，正在悄悄改变你。',
+    '与其焦虑未来，不如认真过好此刻。',
+    '把大目标，拆成今天能做完的一步。',
+    '坚持不是咬牙硬扛，是每天愿意再来一次。',
+    '真正的高手，都在别人看不见的地方努力。',
+    '自律不是束缚，是给自己更多自由。',
+    '想做的事，现在就去做一点点。',
+    '别怕慢，就怕站。',
+    '你已经做得很好了，真的。',
+    '允许自己今天只是普通地过完。',
+    '累了就休息，休息不是偷懒。',
+    '情绪来了会走，你不必赶它。',
+    '今天的难，明天会变成故事。',
+    '你不必让所有人满意。',
+    '先照顾好自己，才有余力照顾别人。',
+    '心里有光的人，走到哪里都不暗。',
+    '慢下来，也是一种前进。',
+    '今天的太阳，是专门为你升起来的。',
+    '你值得被温柔对待，包括被自己。',
+    '不必追赶别人的时区。',
+    '一件一件来，总会做完的。',
+    '深呼吸三次，事情没那么急。',
+    '今天的疲惫，是明天回忆里的勋章。',
+    '给自己一点耐心，你正在成长。',
+    '心情不好也没关系，它允许你来。',
+    '你已经比昨天的自己多撑了一天。',
+    '世界偶尔亏待你，但不会一直。',
+    '把注意力，放在你还拥有的东西上。',
+    '明天会更好，这不是鸡汤，是概率。',
+    '眼下的难，都是暂时的。',
+    '最好的，还没有到来。',
+    '熬过去，你会感谢现在的自己。',
+    '山有峰顶，海有彼岸。',
+    '所有坚持，都会在某个清晨开花。',
+    '你期待的，正在赶来的路上。',
+    '生活不会亏待认真的人。',
+    '每一次低谷，都是往上走的起点。',
+    '今天的努力，是明天的底气。',
+    '保持热爱，奔赴山海。',
+    '生活明朗，万物可爱。',
+    '把日子过成自己喜欢的样子。',
+    '有趣的人，运气都不会太差。',
+    '热爱可抵岁月漫长。',
+    '记得抬头看看今天的天空。',
+    '一餐一饭，都是生活给的糖。',
+    '让喜欢的事成为生活，而不是生活里的例外。',
+    '生活不必太拥挤，简单就好。',
+    '今天也要好好吃饭，好好睡觉。',
+    '虎虎生风，从今天这件小事开始。',
+    '猛虎也有打盹的时候，休息不丢人。',
+    '心里住着一只小老虎，所以不怕。',
+    '抬起头，你可是百兽之王。',
+    '今天也要虎力全开呀。',
+    '别急，属于你的都在路上。'
   ];
   // 截断到 ≤100 字，超出加省略号
   function trim100(s){ s=(s||'').trim(); return s.length>100 ? s.slice(0,100)+'…' : s; }
-  // 用当天日期生成稳定种子，保证当天固定展示同一条、第二天自动轮换
+  // 用当天日期生成稳定种子，保证当天固定展示、第二天自动轮换
   function daySeed(){
     var d=todayStr().replace(/-/g,''); var seed=0;
     for(var k=0;k<d.length;k++){ seed=(seed*31 + d.charCodeAt(k))>>>0; }
     return seed;
   }
-  function renderFun(text){ $('funBody').innerHTML='<div class="fun-a">'+esc(trim100(text))+'</div>'; }
-  // 离线或抓取失败：回退内置短句，保证始终有内容
-  function funFallback(){
-    var list=JOKES.filter(Boolean);
-    renderFun(list.length? list[daySeed()%list.length] : '今天也要元气满满呀～');
+  // 正能量筛选：长度 8~60 字；命中消极词直接淘汰；再要求至少命中一个积极词
+  var POS_NEG=['绝望','崩溃','痛苦','悲伤','孤独','空虚','无法挽回','遗憾','后悔','离别','失去','泪水','哭泣','心碎','厌恶','憎恨','沉沦','放弃','没意义','烂心情','完蛋','没救','讨厌','埋怨','枯萎','腐烂'];
+  var POS_POS=['希望','努力','坚持','温暖','未来','成长','相信','勇敢','值得','热爱','加油','美好','微笑','喜欢','认真','感谢','感激','幸福','温柔','向前','开始','陪伴','力量','期待','珍惜','简单','来得及','会好的','一定','可以','梦想','今天','明天','慢慢','光','愿'];
+  function isPositive(s){
+    s=(s||'').trim();
+    if(s.length<8 || s.length>60) return false;
+    for(var i=0;i<POS_NEG.length;i++){ if(s.indexOf(POS_NEG[i])>=0) return false; }
+    for(var j=0;j<POS_POS.length;j++){ if(s.indexOf(POS_POS[j])>=0) return true; }
+    return false;
   }
-  // 每日一笑：联网抓 hitokoto「抖机灵」段子（CORS 开放、免密钥、国内可达），当天固定一条；
-  // 离线或失败回退内置虎笑话。
-  // 说明：不用热搜做笑料——热搜多为负面社会新闻，直接拿来当段子反而影响心情。
-  var FUN_API = 'https://v1.hitokoto.cn/?c=l&encode=json';
+  // 「换一条」的轮换偏移：点一次 +1，保证内容真的会变
+  function funOffset(){
+    try{ var v=parseInt(localStorage.getItem('wb_fun_off')||'0',10); return isNaN(v)?0:v; }catch(e){ return 0; }
+  }
+  function bumpFunOffset(){ try{ localStorage.setItem('wb_fun_off', String(funOffset()+1)); }catch(e){} }
+  // 按日期种子 + 偏移量挑选 n 条（同一天不变，第二天自动换）
+  function pickFromCorpus(n){
+    var len=POS_QUOTES.length;
+    var base=(daySeed()+funOffset()*7)%len, out=[], k=0, step=13;
+    while(out.length<n && k<len){ out.push(POS_QUOTES[(base+k*step)%len]); k++; }
+    return out;
+  }
+  // 每天 1~2 句：多数日子给 2 句，偶尔 1 句
+  function dailyCount(){ return (daySeed()%5===0)?1:2; }
+  function renderFun(list){
+    var arr=(Object.prototype.toString.call(list)==='[object Array]')? list.slice() : [list];
+    arr=arr.filter(Boolean).map(function(s){ return esc(trim100(String(s))); });
+    if(!arr.length) arr=['今天也要好好照顾自己呀。'];
+    $('funBody').innerHTML=arr.map(function(s){ return '<div class="fun-a">'+s+'</div>'; }).join('');
+  }
+  var POS_API='https://api.xygeng.cn/one';
   function loadFunCache(){
     try{
       var raw=localStorage.getItem('wb_fun'); if(!raw) return null;
       var o=JSON.parse(raw);
-      return (o && o.d===todayStr() && o.t) ? o.t : null;
+      if(!o || o.d!==todayStr() || o.off!==funOffset()) return null;
+      return (o.t && o.t.length)? o.t : null;
     }catch(e){ return null; }
   }
-  function saveFunCache(t){ try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), t:t})); }catch(e){} }
-  // 并发取多条候选，用当日种子挑一条（配合当日缓存 => 一整天内容稳定不变）
-  function fetchFunBatch(n, done, fail){
-    var got=[], left=n;
-    for(var i=0;i<n;i++){
-      (function(k){
-        fetchWithTimeout(FUN_API+'&_='+(Date.now()+k), 8000).then(function(r){ return r.json(); }).then(function(j){
-          var t=(j&&j.hitokoto)? String(j.hitokoto).trim() : '';
-          if(t) got.push(t);
-        }).catch(function(){}).then(function(){
-          left--;
-          if(left<=0){ got.length ? done(got) : fail(); }
-        });
-      })(i);
-    }
+  function saveFunCache(arr){ try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), off:funOffset(), t:arr})); }catch(e){} }
+  // 联网抓「每日一言」；只有过了正能量筛选才用，否则静默放弃（保留已渲染的内置句）
+  function fetchDailyOne(done, fail){
+    fetchWithTimeout(POS_API+'?_='+Date.now(), 8000).then(function(r){ return r.json(); }).then(function(j){
+      var t=(j && j.data && j.data.content)? String(j.data.content).trim() : '';
+      if(t && isPositive(t)) done(trim100(t)); else fail();
+    }).catch(function(){ fail(); });
   }
-  // 轻量打分：偏好段子/歇后语结构，压低抽象文艺断句（避免抽到"丧句"影响心情）
-  function funScore(s){
-    var n=(s||'').length;
-    if(n<8 || n>60) return -99;
-    var sc=0;
-    if(s.indexOf('——')>=0) sc+=3;
-    if(/[，,！？!?]/.test(s)) sc+=1;
-    if(n>=12 && n<=40) sc+=1;
-    if(/^(是|在|那|这|我|你|他|它|有)/.test(s) && s.indexOf('，')<0) sc-=2;
-    return sc;
-  }
-  // 去重后按得分排序，在最好的前 3 条里按当日种子选一条（兼顾质量与每天不重样）
-  function pickBestFun(list){
-    var seen={}, arr=[];
-    list.forEach(function(s){ if(s && !seen[s]){ seen[s]=1; arr.push(s); } });
-    if(!arr.length) return '';
-    arr.sort(function(a,b){ return funScore(b)-funScore(a); });
-    return arr[daySeed() % Math.min(3, arr.length)];
-  }
-  // force=true 时忽略当日缓存，立即换一条
   function initFun(force){
+    if(force) bumpFunOffset();
     if(!force){
       var cached=loadFunCache();
       if(cached){ renderFun(cached); return; }
     }
-    renderFun('正在搜罗今日份快乐…');
-    if(typeof navigator!=='undefined' && navigator.onLine===false){ funFallback(); return; }
-    fetchFunBatch(6, function(list){
-      var t=pickBestFun(list);
-      if(!t){ funFallback(); return; }
-      renderFun(t); saveFunCache(t);
-    }, function(){ funFallback(); });
+    var local=pickFromCorpus(dailyCount());
+    renderFun(local); saveFunCache(local);
+    if(force) return;  // 手动换一条：只用内置语料，保证每次点击内容都变
+    if(typeof navigator!=='undefined' && navigator.onLine===false) return;
+    fetchDailyOne(function(net){
+      var arr=[net].concat(pickFromCorpus(1));
+      renderFun(arr); saveFunCache(arr);
+    }, function(){});
   }
 
 
@@ -1683,7 +1709,7 @@
   function bindEvents(){
     // 待办提醒默认跟随日程：提前15分钟（平台发布会剥离 HTML selected，故用 JS 设定）
     try{ var tr=$('tRem'); if(tr && !tr.value) tr.value='15'; }catch(e){}
-    // 萌虎日趣：手动换一条
+    // 萌虎好❤情：手动换一条
     var fn=$('funNext'); if(fn) fn.addEventListener('click', function(){ initFun(true); });
     // 微信提醒设置
     var wxT=$('wxToggle'); if(wxT) wxT.addEventListener('click',function(){ $('wxForm').classList.toggle('hide'); var u=localStorage.getItem(LS_WX); if(u) $('wxUrl').value=u; });
