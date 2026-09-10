@@ -229,6 +229,7 @@
   .fun-body{font-size:15px;line-height:1.75;padding:2px 2px}
   .fun-a{padding:3px 0}
   .fun-a+.fun-a{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(0,0,0,.09)}
+  .fun-note{font-size:12.5px;color:var(--muted);margin-top:6px}
 
   /* toast & banner */
   .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#0f2e2b;color:#fff;padding:11px 20px;border-radius:24px;font-size:13.5px;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.2);max-width:90vw;text-align:center}
@@ -1044,77 +1045,25 @@
     }
   }
 
-  // ---------- 萌虎好❤情：每天动态更新 1~2 句正能量短句 ----------
-  // 策略：内置精选语料保证「每天都有、质量可控、离线可用」；
-  //       联网时再抓「每日一言」补充第一条，但必须通过正能量筛选——宁可不显示，也不把丧句放进来。
-  var POS_QUOTES=[
-    '今天做一件让未来的自己感谢你的小事。',
-    '慢慢来，比较快。',
-    '不必很厉害才能开始，但要开始了才会很厉害。',
-    '把今天过好，明天自然不会太差。',
-    '你不需要很完美，只需要很真实。',
-    '走慢一点没关系，别停下就好。',
-    '努力的意义，是让未来的自己有得选。',
-    '完成，比完美更重要。',
-    '先做五分钟，状态会自己找上门。',
-    '每天进步一点点，一年就是三十七倍。',
-    '种一棵树最好的时间是十年前，其次是现在。',
-    '方向对了，就不怕路远。',
-    '你现在做的事，正在悄悄改变你。',
-    '与其焦虑未来，不如认真过好此刻。',
-    '把大目标，拆成今天能做完的一步。',
-    '坚持不是咬牙硬扛，是每天愿意再来一次。',
-    '真正的高手，都在别人看不见的地方努力。',
-    '自律不是束缚，是给自己更多自由。',
-    '想做的事，现在就去做一点点。',
-    '别怕慢，就怕站。',
-    '你已经做得很好了，真的。',
-    '允许自己今天只是普通地过完。',
-    '累了就休息，休息不是偷懒。',
-    '情绪来了会走，你不必赶它。',
-    '今天的难，明天会变成故事。',
-    '你不必让所有人满意。',
-    '先照顾好自己，才有余力照顾别人。',
-    '心里有光的人，走到哪里都不暗。',
-    '慢下来，也是一种前进。',
-    '今天的太阳，是专门为你升起来的。',
-    '你值得被温柔对待，包括被自己。',
-    '不必追赶别人的时区。',
-    '一件一件来，总会做完的。',
-    '深呼吸三次，事情没那么急。',
-    '今天的疲惫，是明天回忆里的勋章。',
-    '给自己一点耐心，你正在成长。',
-    '心情不好也没关系，它允许你来。',
-    '你已经比昨天的自己多撑了一天。',
-    '世界偶尔亏待你，但不会一直。',
-    '把注意力，放在你还拥有的东西上。',
-    '明天会更好，这不是鸡汤，是概率。',
-    '眼下的难，都是暂时的。',
-    '最好的，还没有到来。',
-    '熬过去，你会感谢现在的自己。',
-    '山有峰顶，海有彼岸。',
-    '所有坚持，都会在某个清晨开花。',
-    '你期待的，正在赶来的路上。',
-    '生活不会亏待认真的人。',
-    '每一次低谷，都是往上走的起点。',
-    '今天的努力，是明天的底气。',
-    '保持热爱，奔赴山海。',
-    '生活明朗，万物可爱。',
-    '把日子过成自己喜欢的样子。',
-    '有趣的人，运气都不会太差。',
-    '热爱可抵岁月漫长。',
-    '记得抬头看看今天的天空。',
-    '一餐一饭，都是生活给的糖。',
-    '让喜欢的事成为生活，而不是生活里的例外。',
-    '生活不必太拥挤，简单就好。',
-    '今天也要好好吃饭，好好睡觉。',
-    '虎虎生风，从今天这件小事开始。',
-    '猛虎也有打盹的时候，休息不丢人。',
-    '心里住着一只小老虎，所以不怕。',
-    '抬起头，你可是百兽之王。',
-    '今天也要虎力全开呀。',
-    '别急，属于你的都在路上。'
+  // ---------- 萌虎好❤情：每天联网更新 1~2 句正能量 / 有哲理的话（无内置语料）----------
+  // 源：一言(hitokoto) 的 哲学/诗词/文学/原创 四类 + 今日诗词(jinrishici)。
+  //     均实测 CORS 开放、免密钥、国内可达；弃用 动画/其他 两类（日漫台词、歌词、网络梗占比过高）。
+  // 思路：不用关键词判断「情绪」——误杀率太高，会把「为学日益，为道日损」这类文言哲理句全部杀掉。
+  //       改为 ①只拦明显消极词 ②按来源分类加权排序，把二次元台词/网络口语沉底 ③从最优前 4 条里选。
+  var MOOD_SRC=[
+    {u:'https://v1.hitokoto.cn/?c=k&encode=json', c:'k', n:4},   // 哲学
+    {u:'https://v1.hitokoto.cn/?c=i&encode=json', c:'i', n:3},   // 诗词
+    {u:'https://v1.hitokoto.cn/?c=d&encode=json', c:'d', n:3},   // 文学
+    {u:'https://v1.hitokoto.cn/?c=e&encode=json', c:'e', n:3},   // 原创
+    {u:'https://v2.jinrishici.com/one.json',      c:'p', n:3}    // 今日诗词
   ];
+  // 明显消极：命中即淘汰（这些词在积极语境里几乎不出现）
+  var MOOD_NEG=['绝望','崩溃','痛苦','悲伤','寂寞','孤独','空虚','遗憾','后悔','泪水','眼泪','哭泣','心碎','厌恶','憎恨','沉沦','放弃','完蛋','没救','辛酸','荒唐','伤不起','深渊','埋葬','坟墓','自暴自弃','卑鄙','说谎','欺骗','梦魇','倦意','悲','愁','怨','恨','泪','痛','死','孤','寂','寞','毁','衰','残','埋'];
+  // 排序惩罚：二次元/现代口语/网络梗，压到末尾（不淘汰，只是不优先）
+  var MOOD_BAD=['电脑','处理器','动漫','二向箔','清理','游戏','手机','微信','系统','技能','魔法','世界线','主角','弹幕','主播','病毒','快递','外卖','吗','呢','啊','呀','啦','哒','哦','嗯','吧','嘛','咯'];
+  // 排序加分：哲理 / 意境字
+  var MOOD_KEY=['人生','生命','世界','自己','选择','时间','意义','自由','精神','思想','真理','命运','未来','努力','坚持','希望','相信','勇敢','值得','热爱','成长','初心','梦想','善良','坚强','朋友','学习','行动','道德','珍惜','期待','美好','幸福','温暖','加油','心','道','理','真','善','美','爱','光','愿','路','知','行','明','风','月','花','江','山','春','水','云','梦'];
+  var MOOD_CATW={k:2, i:1, d:1, e:0, p:2};   // 哲学与诗词天然更「有哲理」，权重更高
   // 截断到 ≤100 字，超出加省略号
   function trim100(s){ s=(s||'').trim(); return s.length>100 ? s.slice(0,100)+'…' : s; }
   // 用当天日期生成稳定种子，保证当天固定展示、第二天自动轮换
@@ -1123,67 +1072,101 @@
     for(var k=0;k<d.length;k++){ seed=(seed*31 + d.charCodeAt(k))>>>0; }
     return seed;
   }
-  // 正能量筛选：长度 8~60 字；命中消极词直接淘汰；再要求至少命中一个积极词
-  var POS_NEG=['绝望','崩溃','痛苦','悲伤','孤独','空虚','无法挽回','遗憾','后悔','离别','失去','泪水','哭泣','心碎','厌恶','憎恨','沉沦','放弃','没意义','烂心情','完蛋','没救','讨厌','埋怨','枯萎','腐烂'];
-  var POS_POS=['希望','努力','坚持','温暖','未来','成长','相信','勇敢','值得','热爱','加油','美好','微笑','喜欢','认真','感谢','感激','幸福','温柔','向前','开始','陪伴','力量','期待','珍惜','简单','来得及','会好的','一定','可以','梦想','今天','明天','慢慢','光','愿'];
-  function isPositive(s){
+  function moodReject(s, cat){
     s=(s||'').trim();
-    if(s.length<8 || s.length>60) return false;
-    for(var i=0;i<POS_NEG.length;i++){ if(s.indexOf(POS_NEG[i])>=0) return false; }
-    for(var j=0;j<POS_POS.length;j++){ if(s.indexOf(POS_POS[j])>=0) return true; }
+    if(s.length<8 || s.length>50) return true;
+    if(/[\u3040-\u30ff]/.test(s)) return true;                     // 含日文假名（日漫台词）
+    if(cat!=='p' && /[？?]$/.test(s) && s.length<20) return true;   // 纯疑问短句（诗词问句保留）
+    for(var i=0;i<MOOD_NEG.length;i++){ if(s.indexOf(MOOD_NEG[i])>=0) return true; }
     return false;
+  }
+  function moodRank(s, cat){
+    var sc=MOOD_CATW[cat]||0, i;
+    if(s.length>=10 && s.length<=26) sc+=1;                        // 短句更有味道
+    for(i=0;i<MOOD_KEY.length;i++){ if(s.indexOf(MOOD_KEY[i])>=0) sc++; }
+    for(i=0;i<MOOD_BAD.length;i++){ if(s.indexOf(MOOD_BAD[i])>=0) sc-=3; }
+    return sc;
+  }
+  // 去重 → 淘汰消极 → 按分排序 → 在最优前 4 条里按日期种子选 n 条
+  function pickMood(list, n){
+    var seen={}, arr=[];
+    (list||[]).forEach(function(o){
+      var s=(o && o.t ? String(o.t) : '').trim();
+      if(s && !seen[s]){ seen[s]=1; arr.push({t:s, c:o.c}); }
+    });
+    arr=arr.filter(function(o){ return !moodReject(o.t, o.c); });
+    if(!arr.length) return [];
+    arr.sort(function(a,b){ return moodRank(b.t, b.c)-moodRank(a.t, a.c); });
+    var top=arr.slice(0, Math.min(4, arr.length));
+    var out=[], base=daySeed()+funOffset()*3;
+    for(var i=0;i<n && i<top.length;i++){ out.push(top[(base+i)%top.length].t); }
+    return out;
+  }
+  // 并发抓取全部候选（同一天只跑一次，结果当日缓存）
+  function fetchMoodCands(done){
+    var urls=[];
+    MOOD_SRC.forEach(function(s){
+      for(var i=0;i<s.n;i++){
+        // 带时间戳防缓存；注意有的源本身无 query，需补 '?'
+        urls.push({u: s.u + (s.u.indexOf('?')>=0 ? '&' : '?') + '_=' + Date.now() + '_' + i + '_' + s.c, c: s.c});
+      }
+    });
+    var got=[], left=urls.length;
+    if(!left){ done(got); return; }
+    urls.forEach(function(o){
+      fetchWithTimeout(o.u, 8000).then(function(r){ return r.json(); }).then(function(j){
+        var t=(j && j.hitokoto) ? String(j.hitokoto)
+             : ((j && j.data && j.data.content) ? String(j.data.content) : '');
+        t=(t||'').trim();
+        if(t) got.push({t:t, c:o.c});
+      }).catch(function(){}).then(function(){
+        left--; if(left<=0) done(got);
+      });
+    });
   }
   // 「换一条」的轮换偏移：点一次 +1，保证内容真的会变
   function funOffset(){
     try{ var v=parseInt(localStorage.getItem('wb_fun_off')||'0',10); return isNaN(v)?0:v; }catch(e){ return 0; }
   }
   function bumpFunOffset(){ try{ localStorage.setItem('wb_fun_off', String(funOffset()+1)); }catch(e){} }
-  // 按日期种子 + 偏移量挑选 n 条（同一天不变，第二天自动换）
-  function pickFromCorpus(n){
-    var len=POS_QUOTES.length;
-    var base=(daySeed()+funOffset()*7)%len, out=[], k=0, step=13;
-    while(out.length<n && k<len){ out.push(POS_QUOTES[(base+k*step)%len]); k++; }
-    return out;
-  }
   // 每天 1~2 句：多数日子给 2 句，偶尔 1 句
   function dailyCount(){ return (daySeed()%5===0)?1:2; }
-  function renderFun(list){
+  function renderFun(list, note){
     var arr=(Object.prototype.toString.call(list)==='[object Array]')? list.slice() : [list];
     arr=arr.filter(Boolean).map(function(s){ return esc(trim100(String(s))); });
-    if(!arr.length) arr=['今天也要好好照顾自己呀。'];
-    $('funBody').innerHTML=arr.map(function(s){ return '<div class="fun-a">'+s+'</div>'; }).join('');
+    var html=arr.map(function(s){ return '<div class="fun-a">'+s+'</div>'; }).join('');
+    if(note) html+='<div class="fun-note">'+esc(note)+'</div>';
+    if(!html) html='<div class="fun-note">今日份好心情正在路上，联网后自动送达～</div>';
+    $('funBody').innerHTML=html;
   }
-  var POS_API='https://api.xygeng.cn/one';
-  function loadFunCache(){
+  function loadMoodCache(){
     try{
       var raw=localStorage.getItem('wb_fun'); if(!raw) return null;
       var o=JSON.parse(raw);
-      if(!o || o.d!==todayStr() || o.off!==funOffset()) return null;
-      return (o.t && o.t.length)? o.t : null;
+      return (o && o.t && o.t.length) ? o : null;   // 不做日期校验：离线时可展示最近一次内容
     }catch(e){ return null; }
   }
-  function saveFunCache(arr){ try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), off:funOffset(), t:arr})); }catch(e){} }
-  // 联网抓「每日一言」；只有过了正能量筛选才用，否则静默放弃（保留已渲染的内置句）
-  function fetchDailyOne(done, fail){
-    fetchWithTimeout(POS_API+'?_='+Date.now(), 8000).then(function(r){ return r.json(); }).then(function(j){
-      var t=(j && j.data && j.data.content)? String(j.data.content).trim() : '';
-      if(t && isPositive(t)) done(trim100(t)); else fail();
-    }).catch(function(){ fail(); });
-  }
+  function saveMoodCache(arr){ try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), off:funOffset(), t:arr})); }catch(e){} }
   function initFun(force){
     if(force) bumpFunOffset();
-    if(!force){
-      var cached=loadFunCache();
-      if(cached){ renderFun(cached); return; }
+    var c=loadMoodCache();
+    // 同一天且同一偏移 → 直接用缓存，当天内容恒定、不重复发请求
+    if(!force && c && c.d===todayStr() && c.off===funOffset()){ renderFun(c.t); return; }
+    if(typeof navigator!=='undefined' && navigator.onLine===false){
+      if(c) renderFun(c.t, '离线中，显示 '+c.d+' 的内容');
+      else renderFun([], '今日份好心情正在路上，联网后自动送达～');
+      return;
     }
-    var local=pickFromCorpus(dailyCount());
-    renderFun(local); saveFunCache(local);
-    if(force) return;  // 手动换一条：只用内置语料，保证每次点击内容都变
-    if(typeof navigator!=='undefined' && navigator.onLine===false) return;
-    fetchDailyOne(function(net){
-      var arr=[net].concat(pickFromCorpus(1));
-      renderFun(arr); saveFunCache(arr);
-    }, function(){});
+    fetchMoodCands(function(list){
+      var arr=pickMood(list, dailyCount());
+      if(!arr.length){
+        // 联网拿到但全部不合格：退回最近一次内容，而不是显示不合适的句子
+        if(c) renderFun(c.t, '暂无更合适的内容，显示 '+c.d+' 的');
+        else renderFun([], '今日份好心情正在路上，稍后再来看看～');
+        return;
+      }
+      renderFun(arr); saveMoodCache(arr);
+    });
   }
 
 
