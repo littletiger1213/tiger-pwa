@@ -331,7 +331,7 @@
 
       <!--pnid:rwPZB9B4jbbnJ0pSbojagi--><!-- 萌虎日趣 -->
       <div data-page-node-id="JlINeZky2ZjbTqCRpzU9BW" class="card fun-card" id="sec-fun">
-        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->萌虎日趣</h2></div>
+        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->萌虎日趣</h2><span class="spacer"></span><button class="btn line sm" id="funNext">换一条</button></div>
         <div data-page-node-id="R7hhwCsjJGAKoudyCh2ufs" class="fun-body" id="funBody"></div>
       </div>
 
@@ -1099,20 +1099,45 @@
     var list=JOKES.filter(Boolean);
     renderFun(list.length? list[daySeed()%list.length] : '今天也要元气满满呀～');
   }
-  // 联网时实时抓取当天热点趣事，按日期稳定选一条；失败或离线时回退内置短句
-  function initFun(){
-    renderFun('正在为你搜罗今日热点趣事…');
+  // 每日一笑：联网抓 hitokoto「抖机灵」段子（CORS 开放、免密钥、国内可达），当天固定一条；
+  // 离线或失败回退内置虎笑话。
+  // 说明：不用热搜做笑料——热搜多为负面社会新闻，直接拿来当段子反而影响心情。
+  var FUN_API = 'https://v1.hitokoto.cn/?c=l&encode=json';
+  function loadFunCache(){
+    try{
+      var raw=localStorage.getItem('wb_fun'); if(!raw) return null;
+      var o=JSON.parse(raw);
+      return (o && o.d===todayStr() && o.t) ? o.t : null;
+    }catch(e){ return null; }
+  }
+  function saveFunCache(t){ try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), t:t})); }catch(e){} }
+  // 并发取多条候选，用当日种子挑一条（配合当日缓存 => 一整天内容稳定不变）
+  function fetchFunBatch(n, done, fail){
+    var got=[], left=n;
+    for(var i=0;i<n;i++){
+      (function(k){
+        fetchWithTimeout(FUN_API+'&_='+(Date.now()+k), 8000).then(function(r){ return r.json(); }).then(function(j){
+          var t=(j&&j.hitokoto)? String(j.hitokoto).trim() : '';
+          if(t) got.push(t);
+        }).catch(function(){}).then(function(){
+          left--;
+          if(left<=0){ got.length ? done(got) : fail(); }
+        });
+      })(i);
+    }
+  }
+  // force=true 时忽略当日缓存，立即换一条
+  function initFun(force){
+    if(!force){
+      var cached=loadFunCache();
+      if(cached){ renderFun(cached); return; }
+    }
+    renderFun('正在搜罗今日份快乐…');
     if(typeof navigator!=='undefined' && navigator.onLine===false){ funFallback(); return; }
-    (function trySrc(i){
-      if(i>=NEWS_SOURCES.length){ funFallback(); return; }
-      fetchWithTimeout(NEWS_SOURCES[i], 8000).then(function(r){ return r.json(); }).then(function(j){
-        var list=(j&&j.data&&j.data.news)||[];
-        if(!list.length) throw new Error('empty');
-        var item=list[daySeed()%list.length];
-        renderFun(item);
-        try{ localStorage.setItem('wb_fun', JSON.stringify({d:todayStr(), t:item})); }catch(e){}
-      }).catch(function(){ trySrc(i+1); });
-    })(0);
+    fetchFunBatch(4, function(list){
+      var t=list[daySeed()%list.length];
+      renderFun(t); saveFunCache(t);
+    }, function(){ funFallback(); });
   }
 
 
@@ -1638,6 +1663,8 @@
   function bindEvents(){
     // 待办提醒默认跟随日程：提前15分钟（平台发布会剥离 HTML selected，故用 JS 设定）
     try{ var tr=$('tRem'); if(tr && !tr.value) tr.value='15'; }catch(e){}
+    // 萌虎日趣：手动换一条
+    var fn=$('funNext'); if(fn) fn.addEventListener('click', function(){ initFun(true); });
     // 微信提醒设置
     var wxT=$('wxToggle'); if(wxT) wxT.addEventListener('click',function(){ $('wxForm').classList.toggle('hide'); var u=localStorage.getItem(LS_WX); if(u) $('wxUrl').value=u; });
     var wxS=$('wxSave'); if(wxS) wxS.addEventListener('click',function(){
