@@ -1126,6 +1126,25 @@
       })(i);
     }
   }
+  // 轻量打分：偏好段子/歇后语结构，压低抽象文艺断句（避免抽到"丧句"影响心情）
+  function funScore(s){
+    var n=(s||'').length;
+    if(n<8 || n>60) return -99;
+    var sc=0;
+    if(s.indexOf('——')>=0) sc+=3;
+    if(/[，,！？!?]/.test(s)) sc+=1;
+    if(n>=12 && n<=40) sc+=1;
+    if(/^(是|在|那|这|我|你|他|它|有)/.test(s) && s.indexOf('，')<0) sc-=2;
+    return sc;
+  }
+  // 去重后按得分排序，在最好的前 3 条里按当日种子选一条（兼顾质量与每天不重样）
+  function pickBestFun(list){
+    var seen={}, arr=[];
+    list.forEach(function(s){ if(s && !seen[s]){ seen[s]=1; arr.push(s); } });
+    if(!arr.length) return '';
+    arr.sort(function(a,b){ return funScore(b)-funScore(a); });
+    return arr[daySeed() % Math.min(3, arr.length)];
+  }
   // force=true 时忽略当日缓存，立即换一条
   function initFun(force){
     if(!force){
@@ -1134,8 +1153,9 @@
     }
     renderFun('正在搜罗今日份快乐…');
     if(typeof navigator!=='undefined' && navigator.onLine===false){ funFallback(); return; }
-    fetchFunBatch(4, function(list){
-      var t=list[daySeed()%list.length];
+    fetchFunBatch(6, function(list){
+      var t=pickBestFun(list);
+      if(!t){ funFallback(); return; }
       renderFun(t); saveFunCache(t);
     }, function(){ funFallback(); });
   }
