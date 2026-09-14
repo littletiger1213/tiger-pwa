@@ -422,11 +422,13 @@
               <button class="btn" id="icsSave">保存并同步</button>
               <button class="btn line" id="icsSync">立即同步</button>
             </div>
-            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"></div>
+            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址（推荐 · 国内可达）</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"></div>
             <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
               <button class="btn line sm" id="icsCopy">复制订阅地址</button>
               <button class="btn line sm" id="icsWebcal">在日历 App 中订阅</button>
+              <button class="btn line sm" id="icsCopyAlt">复制备用地址</button>
             </div>
+            <div class="field" style="grid-column:1/-1"><label>备用地址（直连 GitHub，上面那条订阅报错时才用）</label><input id="icsUrlAlt" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">两条地址内容完全相同。推荐地址走国内可达的 CDN 加速；若 iPhone 提示 validation failed / 无法验证账户信息，说明你的网络连不上 GitHub 直连，改用这条即可。</span></div>
             <div class="field" style="grid-column:1/-1"><span id="icsTip" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
           </div>
         </div>
@@ -1540,9 +1542,26 @@
     }catch(e){ return btoa(unescape(encodeURIComponent(s))); }
   }
   function subUrlOf(cfg){
+    // 推荐地址：jsDelivr CDN —— 走 Cloudflare 边缘，国内可达性远好于 github.io 直连，
+    // iOS 订阅校验（一次同步请求，超时即 validation failed）才不会卡住。
+    cfg=cfg||ghCfg();
+    if(!ghReady(cfg)) return '';
+    return 'https://cdn.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+  }
+  function subUrlGh(cfg){
+    // 备用地址：GitHub Pages 直连。内容与上面完全相同，极少数网络下反而更通。
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
     return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
+  }
+  function jsdPurge(cfg){
+    // jsDelivr 对分支引用有 12 小时边缘缓存。每次上传成功后就调 purge 接口主动失效，
+    // 让 iPhone 下次刷新订阅时立刻拿到新日程（失败也无妨，最迟 12 小时后自然过期）。
+    try{
+      cfg=cfg||ghCfg(); if(!ghReady(cfg)) return;
+      var u='https://purge.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+      fetch(u,{cache:'no-store'}).then(function(){}).catch(function(){});
+    }catch(e){}
   }
   function icsTipSet(msg, bad){
     var el=$('icsTip'); if(!el) return;
@@ -1558,7 +1577,8 @@
   }
   function renderIcsBox(){
     var cfg=ghCfg();
-    var el=$('icsUrl'); if(el) el.value=subUrlOf(cfg)||'';
+    var el=$('icsUrl'); if(el){ el.value=subUrlOf(cfg)||''; try{ el.readOnly=true; }catch(e){} }
+    var alt=$('icsUrlAlt'); if(alt){ alt.value=subUrlGh(cfg)||''; try{ alt.readOnly=true; }catch(e){} }
     var ow=$('icsOwner'); if(ow && !ow.value) ow.value=cfg.owner||GH_DEF_OWNER;
     var rp=$('icsRepo');  if(rp && !rp.value) rp.value=cfg.repo||GH_DEF_REPO;
     var tk=$('icsToken'); if(tk) tk.placeholder = cfg.token ? '已保存，如需更换请重新粘贴' : 'ghp_… 或 github_pat_…';
@@ -1862,12 +1882,20 @@
     var icC=$('icsCopy'); if(icC) icC.addEventListener('click', function(){
       var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
       copyText(u, function(ok){
-        icsTipSet(ok ? '订阅地址已复制。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历'
+        icsTipSet(ok ? '推荐地址已复制。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 粘贴'
+                     : '复制失败，请长按上方输入框手动复制', !ok);
+      });
+    });
+    var icA=$('icsCopyAlt'); if(icA) icA.addEventListener('click', function(){
+      var u=subUrlGh(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
+      copyText(u, function(ok){
+        icsTipSet(ok ? '备用地址已复制。两条地址内容完全相同，只是 iPhone 访问时走的网络路径不同'
                      : '复制失败，请长按上方输入框手动复制', !ok);
       });
     });
     var icW=$('icsWebcal'); if(icW) icW.addEventListener('click', function(){
       var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
+      // 交给系统日历去订阅；若本机网络连不上该域名，日历会提示 validation failed，改用备用地址即可
       location.href='webcal://'+u.replace(/^https?:\/\//,'');
     });
     renderIcsBox();
