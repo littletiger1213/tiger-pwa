@@ -1540,8 +1540,9 @@
       return btoa(bin);
     }catch(e){ return btoa(unescape(encodeURIComponent(s))); }
   }
-  // 三条线路，日历内容完全相同，只是 iPhone 访问时走的网络路径不同。
-  // 2026-09-14 实测：GitHub Pages 直连最稳（每次 200）；jsDelivr 节点偶发 502；gh-proxy 是国内加速反代。
+  // 两条线路，日历内容完全相同，只是 iPhone 访问时走的网络路径不同。
+  // 两条都是**单层 https 地址**（iOS 订阅解析器能识别），不再使用任何嵌套 URL。
+  // 2026-09-14 实测：GitHub Pages 直连最稳；jsDelivr 走 Cloudflare 边缘，节点偶发波动。
   function subUrlOf(cfg){
     // 线路 1（默认）：GitHub Pages 直连 —— 服务端最稳定
     cfg=cfg||ghCfg();
@@ -1554,18 +1555,17 @@
     if(!ghReady(cfg)) return '';
     return 'https://cdn.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
   }
-  function subUrlProxy(cfg){
-    // 线路 3：国内加速反代（把 GitHub 原始文件转发回来，墙内可达性最好）
-    cfg=cfg||ghCfg();
-    if(!ghReady(cfg)) return '';
-    return 'https://gh-proxy.com/https://raw.githubusercontent.com/'+cfg.owner+'/'+cfg.repo+'/'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
-  }
+  // ⚠️ 2026-09-14 重要修正：旧的「国内加速线路」用的是
+  //   https://gh-proxy.com/https://raw.githubusercontent.com/…
+  // 这种「嵌套 URL」（URL 里再套一个完整 https 地址）。浏览器 fetch 能请求，
+  // 但 **iOS 日历订阅进程（dataaccessd）的 URL 解析器不认内层协议头**，
+  // 会直接抛出 "cannot connect using SSL"。已删除。
+  // 铁律：交给 iPhone 订阅的地址必须是**单层、干净**的 https URL。
   function icsLines(cfg){
     cfg=cfg||ghCfg();
     return [
       {name:'GitHub 直连',  url:subUrlOf(cfg)},
-      {name:'jsDelivr CDN', url:subUrlAlt(cfg)},
-      {name:'国内加速线路', url:subUrlProxy(cfg)}
+      {name:'jsDelivr CDN', url:subUrlAlt(cfg)}
     ];
   }
   // 单条线路探测：先按常规请求（能读到状态码）；若被跨域策略挡回，再用 no-cors 复测一次，
@@ -1585,7 +1585,7 @@
     var cfg=ghCfg();
     if(!ghReady(cfg)){ icsTipSet('请先保存配置', true); return; }
     var list=icsLines(cfg), res=[], done=0, best=null;
-    icsTipSet('正在测试三条线路…');
+    icsTipSet('正在测试两条线路…');
     list.forEach(function(it, i){
       icsProbe(it.url).then(function(r){
         res[i]={name:it.name, url:it.url, ok:r.ok, code:r.code, ms:r.ms};
@@ -1597,7 +1597,7 @@
           var el=$('icsUrl'); if(el) el.value=best.url;
           icsTipSet(txt+'　→ 已选用「'+best.name+'」，直接复制去订阅');
         }else{
-          icsTipSet(txt+'　→ 三条都不通：你的网络访问不了 GitHub。请用「下载日历文件」手动导入。', true);
+          icsTipSet(txt+'　→ 两条都不通：你的网络连不上 GitHub 系域名。请改用「下载日历文件」手动导入（提醒同样由 iOS 系统推送，只是改日程后需重新导入一次）。', true);
         }
       });
     });
