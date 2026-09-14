@@ -1,4 +1,10 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v20：修复「测试哪条能通」永远卡在中途（实测卡在 3/4 不动）。
+ *      根因：icsProbe 里的 fetch 没有任何超时。iOS Safari 的 fetch 默认超时长达 1~3 分钟，
+ *      只要有一条线路静默挂起（既不回包也不报错，如 raw.githack.com），整个测速就永远不结束。
+ *      修复：① 每条线路套 AbortController 硬超时 6 秒（fetchWithTimeout 支持追加选项）；
+ *            ② 再加一道 14 秒看门狗兜底，任何情况下界面都会出结果；
+ *            ③ 「直接打开验证」每条线路旁加「复制」按钮（事件委托，主脚本被 IIFE 包裹用不了内联 onclick）。
  * v19：订阅链路补强 ——
  *      ① ICS 头部新增 X-PUBLISHED-TTL / REFRESH-INTERVAL（PT15M）：告诉 iOS「这个日历每 15 分钟会变」，
  *         否则 iPhone 可能按默认的「每天/每周」才刷新一次，当天新加的日程要等很久才进手机。
@@ -16,7 +22,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v19';
+const CACHE = 'wb-pwa-v20';
 const ASSETS = [
   './',
   './index.html',
