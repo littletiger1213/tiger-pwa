@@ -1,8 +1,13 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v19：订阅链路补强 ——
+ *      ① ICS 头部新增 X-PUBLISHED-TTL / REFRESH-INTERVAL（PT15M）：告诉 iOS「这个日历每 15 分钟会变」，
+ *         否则 iPhone 可能按默认的「每天/每周」才刷新一次，当天新加的日程要等很久才进手机。
+ *      ② 订阅线路扩到 4 条（GitHub / jsDelivr / Statically / gitHack），全是单层 https。
+ *      ③ 移除「在日历 App 中订阅」(webcal) 按钮 —— 该路径必然触发「不安全连接」，属死路。
+ *      ④ 新增「直接打开验证」直链区：fetch 能通 ≠ iOS 日历进程能通，只能靠 Safari 直开确认。
  * v18 关键修复：删除「嵌套 URL」订阅线路 —— https://gh-proxy.com/https://raw.githubusercontent.com/…
  *      这种 URL 里再套一个完整 https 地址的写法，浏览器 fetch 能跑，但 iOS 日历订阅进程
  *      (dataaccessd) 的 URL 解析器不认内层协议头，会直接抛 "cannot connect using SSL"。
- *      现只保留单层、干净的 https 地址。
  * v17：日历订阅改为「多线路 + 一键测速」，默认 GitHub 直连。
  * v16：日历订阅地址曾改用 jsDelivr + 同步后主动清 CDN 缓存。
  * v15：HTML 改为 network-first。
@@ -11,7 +16,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v18';
+const CACHE = 'wb-pwa-v19';
 const ASSETS = [
   './',
   './index.html',
