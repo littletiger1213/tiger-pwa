@@ -1,4 +1,12 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v22：⭐ 找到「Safari 能打开、日历订阅却报 cannot connect using SSL」的真正根因 —— **证书信任库**，不是网络。
+ *      GitHub Pages 的证书链是  *.github.io ← Let's Encrypt YR1 ← ISRG Root YR ← ISRG Root X1。
+ *      `ISRG Root YR` 是 Let's Encrypt 2025-09 才生成的「Generation Y」新根，
+ *      **Apple 当前信任库只收录了 ISRG Root X1/X2，尚未收录 Root YR**。
+ *      iOS 对「未知根」的信任评估会在每次新 TLS 握手上卡住：Safari 能扛过去（白屏 8~25 秒），
+ *      而系统日历进程 dataaccessd 等待上限更短 → 直接判成 SSL 连接失败。
+ *      对策：**默认订阅线路改为 jsDelivr**（Sectigo 证书，根是 2004 年的 AAA Certificate Services，
+ *      iOS 从第一代就信任），GitHub 直连退到第三位。实测 jsDelivr 连测 8/8 通过、1 秒内响应。
  * v21：两个真问题一起修 ——
  *      ① **Service Worker 会把 .ics 缓存下来**（原来走「静态资源 cache-first」），
  *         首次探测成功后，之后无论网络是否通，「测试哪条能通」都返回 ✓ —— 纯粹假阳性，
@@ -30,7 +38,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v21';
+const CACHE = 'wb-pwa-v22';
 const ASSETS = [
   './',
   './index.html',
