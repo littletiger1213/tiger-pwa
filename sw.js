@@ -1,10 +1,12 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v16：日历订阅地址改用 jsDelivr（国内可达）+ 同步后主动清 CDN 缓存。
  * v15 关键修复：HTML 改为 network-first。
  * 旧版(v14)对 index.html 用 cache-first，且各版本 sw.js 字节完全相同，
  * 导致浏览器认为 SW 无更新，PWA 被永久锁死在首次安装时缓存的旧页面，
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
+ * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v15';
+const CACHE = 'wb-pwa-v16';
 const ASSETS = [
   './',
   './index.html',
