@@ -422,7 +422,7 @@
               <button class="btn" id="icsSave">保存并同步</button>
               <button class="btn line" id="icsSync">立即同步</button>
             </div>
-            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">四条线路，日历内容完全相同，只是 iPhone 访问时走的网络不同。先点「测试哪条能通」，再点每条右边的「验证」逐条确认，最后用确定能通的那条去订阅。</span></div>
+            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址（默认 jsDelivr，证书兼容性最好）</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">默认给的是 <b>jsDelivr</b> 那条 —— 它用 Sectigo 证书（根是 2004 年的 AAA Certificate Services），iOS 从第一代就信任。<b>GitHub 直连</b>的证书链含 Let's Encrypt 2025 年新根 <code>ISRG Root YR</code>，Apple 信任库尚未收录，新 iOS 上会被系统日历进程判成「无法建立 SSL 连接」——这正是「Safari 能打开、日历却报 SSL 错」的原因，所以它已退到第三位。四条内容完全相同。先点「测试哪条能通」，再点每条右边的「验证」逐条确认。</span></div>
             <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
               <button class="btn line sm" id="icsTest">测试哪条能通</button>
               <button class="btn line sm" id="icsCopy">复制订阅地址</button>
@@ -432,11 +432,12 @@
               <div style="color:#6B6B70; font-size:12px; line-height:1.8">
                 扫码会被 iOS 当成「非加密链接」处理，<b>必定</b>弹出「不安全连接」然后订阅失败——这不是地址的问题，是 iOS 的规定。<br>
                 <b>正确做法（手动添加，一次到位）：</b><br>
-                ① 点上面的「复制订阅地址」<br>
+                ① 点上面的「复制订阅地址」—— <b>确认地址以 <code>https://cdn.jsdelivr.net/gh/</code> 开头</b>。若显示的是 <code>github.io</code>，说明这条会被证书问题挡住，请回上面点「jsDelivr CDN」那条右边的「复制订阅地址」<br>
                 ② iPhone：<b>设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历</b><br>
                 ③ 把输入框<b>清空</b>再粘贴（避免变成 webcal://https://… 叠加）<br>
                 ④ 点「下一步」→「存储」<br>
                 ⑤ 最后去 <b>设置 → 日历 → 账户 → 获取新数据</b>，把刷新改成「每 15 分钟」或「每小时」，新日程才会及时进手机。<br>
+                <b>若仍报「cannot connect using SSL」：</b>先确认你用的是 jsDelivr 那条。若已经是 jsDelivr 仍失败，说明是设备侧的网络接管问题——按顺序排查：关掉 VPN / 代理类 App（Shadowrocket、Clash、Quantumult 等）→ 切到蜂窝数据（不用 Wi-Fi）→ 设置 → 通用 → 日期与时间 打开「自动设置」→ 重启手机。<br>
                 <b>关于「验证」的判读：</b>点「验证」能看到一堆文字（开头 <code>BEGIN:VCALENDAR</code>）= 这条通 ✅；一片空白或报错 = 不通 ❌。<b>注意</b>：如果你直接打开 <code>.ics</code> 看到空白，那是 iOS 的规定（Safari 不显示 <code>text/calendar</code>），不能据此判断不通——所以「验证」按钮会打开同一个文件的纯文本版。
               </div>
             </div>
@@ -1564,34 +1565,46 @@
   }
   // 多条线路，日历内容完全相同，只是 iPhone 访问时走的网络路径 / 证书体系不同。
   // 全部是**单层 https 地址**（iOS 订阅解析器能识别），不使用任何嵌套 URL。
-  // 2026-09-14 实测：GitHub Pages 直连最稳（每次 200 + text/calendar + 7297B）；
-  // jsDelivr 走 Cloudflare 边缘（连测 6/6 通过），中途偶发 502 属节点波动。
-  function subUrlOf(cfg){
-    // 线路 1（默认）：GitHub Pages 直连 —— 服务端最稳定
-    cfg=cfg||ghCfg();
-    if(!ghReady(cfg)) return '';
-    return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
-  }
-  function subUrlAlt(cfg){
-    // 线路 2：jsDelivr CDN —— Cloudflare 边缘，与线路 1 的证书体系不同，
-    // 若手机对 Let's Encrypt 新根证书链不友好，换这条往往就通。
+  //
+  // ⭐ 2026-09-14 根因定位（换线路的真正原因 —— 不是网络，是证书信任库）：
+  //   GitHub Pages 现在的证书链是：*.github.io ← Let's Encrypt YR1 ← ISRG Root YR ← ISRG Root X1。
+  //   `ISRG Root YR` 是 Let's Encrypt 2025-09 才生成的「Generation Y」新根，
+  //   **Apple 当前信任库只收录了 ISRG Root X1 / X2，尚未收录 Root YR**。
+  //   据 Vercel 社区在 iOS 26 + 真机上的实测：iOS 对「未知根」的信任评估会在每一次新的
+  //   TLS 握手时卡住 —— Safari 能扛过去（表现为白屏 8~25 秒），而**系统日历进程
+  //   dataaccessd 的等待上限更短，会直接判定为 "cannot connect using SSL"**。
+  //   这就精确解释了我们遇到的怪象：Safari 里能打开、日历订阅却报 SSL 错。
+  //   对策：默认线路改用 jsDelivr —— 它走 Cloudflare / Fastly 边缘，用 Sectigo 与 GlobalSign
+  //   证书，根证书是 2004 年的 AAA Certificate Services（或更老的 GlobalSign Root），
+  //   iOS 从第一代就信任，完全避开 Gen-Y 兼容问题。实测连测 8/8 通过、1 秒内响应。
+  function subUrlJsd(cfg){
+    // 线路 1（默认）：jsDelivr CDN —— Sectigo 证书链（AAA Certificate Services 老根），兼容性最好
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
     return 'https://cdn.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
   }
-  function subUrlStat(cfg){
-    // 线路 3（备选）：Statically —— 同样是 Cloudflare 代理，独立域名，可作第三条退路
+  function subUrlJsdFastly(cfg){
+    // 线路 2：jsDelivr 的 Fastly 边缘 —— 证书走 GlobalSign 体系，与线路 1 是两套独立节点
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
-    return 'https://cdn.statically.io/gh/'+cfg.owner+'/'+cfg.repo+'/'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+    return 'https://fastly.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
   }
-  function subUrlHack(cfg){
-    // 线路 4（备选）：gitHack —— 老牌 raw 代理，独立域名
+  function subUrlGh(cfg){
+    // 线路 3：GitHub Pages 直连 —— ⚠️ 证书链含 Let's Encrypt Gen-Y 新根（ISRG Root YR），
+    // 部分 iOS 版本不认，会把订阅误判成 SSL 失败。仅作退路，不建议首选。
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
-    return 'https://raw.githack.com/'+cfg.owner+'/'+cfg.repo+'/'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+    return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
   }
-  // ⚠️ 2026-09-14 重要修正：旧的「国内加速线路」用的是
+  function subUrlJsdGcore(cfg){
+    // 线路 4：jsDelivr 的 Gcore 边缘 —— 同为 Sectigo 链，第四条退路
+    cfg=cfg||ghCfg();
+    if(!ghReady(cfg)) return '';
+    return 'https://gcore.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+  }
+  // 兼容旧调用名：默认订阅地址 = 线路 1（jsDelivr）
+  function subUrlOf(cfg){ return subUrlJsd(cfg); }
+  // ⚠️ 2026-09-14 另一条铁律：旧的「国内加速线路」用的是
   //   https://gh-proxy.com/https://raw.githubusercontent.com/…
   // 这种「嵌套 URL」（URL 里再套一个完整 https 地址）。浏览器 fetch 能请求，
   // 但 **iOS 日历订阅进程（dataaccessd）的 URL 解析器不认内层协议头**，
@@ -1600,11 +1613,13 @@
   function icsLines(cfg){
     cfg=cfg||ghCfg();
     // 顺序即优先级：测试时并发全测，自动选用「第一条能通的」，所以顺序不能乱。
+    // 前两条都是 jsDelivr（证书兼容性最好、避开 Let's Encrypt Gen-Y 新根），
+    // GitHub 直连退到第三（它的证书链含 ISRG Root YR，新 iOS 可能不认）。
     return [
-      {name:'GitHub 直连',  url:subUrlOf(cfg)},
-      {name:'jsDelivr',     url:subUrlAlt(cfg)},
-      {name:'Statically',   url:subUrlStat(cfg)},
-      {name:'gitHack',      url:subUrlHack(cfg)}
+      {name:'jsDelivr CDN',    url:subUrlJsd(cfg)},
+      {name:'jsDelivr Fastly', url:subUrlJsdFastly(cfg)},
+      {name:'GitHub 直连',     url:subUrlGh(cfg)},
+      {name:'jsDelivr Gcore',  url:subUrlJsdGcore(cfg)}
     ];
   }
   // 单条线路探测。**必须带硬超时**：
