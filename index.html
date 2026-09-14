@@ -422,13 +422,12 @@
               <button class="btn" id="icsSave">保存并同步</button>
               <button class="btn line" id="icsSync">立即同步</button>
             </div>
-            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址（推荐 · 国内可达）</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"></div>
+            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">共三条线路，日历内容完全相同，只是 iPhone 访问时走的网络不同。若订阅时提示 validation failed / 无法验证账户信息，点下面的「测试哪条能通」，会自动切到能连通的那条再复制。</span></div>
             <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <button class="btn line sm" id="icsTest">测试哪条能通</button>
               <button class="btn line sm" id="icsCopy">复制订阅地址</button>
               <button class="btn line sm" id="icsWebcal">在日历 App 中订阅</button>
-              <button class="btn line sm" id="icsCopyAlt">复制备用地址</button>
             </div>
-            <div class="field" style="grid-column:1/-1"><label>备用地址（直连 GitHub，上面那条订阅报错时才用）</label><input id="icsUrlAlt" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">两条地址内容完全相同。推荐地址走国内可达的 CDN 加速；若 iPhone 提示 validation failed / 无法验证账户信息，说明你的网络连不上 GitHub 直连，改用这条即可。</span></div>
             <div class="field" style="grid-column:1/-1"><span id="icsTip" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
           </div>
         </div>
@@ -1541,18 +1540,67 @@
       return btoa(bin);
     }catch(e){ return btoa(unescape(encodeURIComponent(s))); }
   }
+  // 三条线路，日历内容完全相同，只是 iPhone 访问时走的网络路径不同。
+  // 2026-09-14 实测：GitHub Pages 直连最稳（每次 200）；jsDelivr 节点偶发 502；gh-proxy 是国内加速反代。
   function subUrlOf(cfg){
-    // 推荐地址：jsDelivr CDN —— 走 Cloudflare 边缘，国内可达性远好于 github.io 直连，
-    // iOS 订阅校验（一次同步请求，超时即 validation failed）才不会卡住。
+    // 线路 1（默认）：GitHub Pages 直连 —— 服务端最稳定
+    cfg=cfg||ghCfg();
+    if(!ghReady(cfg)) return '';
+    return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
+  }
+  function subUrlAlt(cfg){
+    // 线路 2：jsDelivr CDN（Cloudflare 边缘，国内可达性好，但节点间歇性 502）
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
     return 'https://cdn.jsdelivr.net/gh/'+cfg.owner+'/'+cfg.repo+'@'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
   }
-  function subUrlGh(cfg){
-    // 备用地址：GitHub Pages 直连。内容与上面完全相同，极少数网络下反而更通。
+  function subUrlProxy(cfg){
+    // 线路 3：国内加速反代（把 GitHub 原始文件转发回来，墙内可达性最好）
     cfg=cfg||ghCfg();
     if(!ghReady(cfg)) return '';
-    return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
+    return 'https://gh-proxy.com/https://raw.githubusercontent.com/'+cfg.owner+'/'+cfg.repo+'/'+(cfg.branch||GH_DEF_BRANCH)+'/'+icsPathOf(cfg);
+  }
+  function icsLines(cfg){
+    cfg=cfg||ghCfg();
+    return [
+      {name:'GitHub 直连',  url:subUrlOf(cfg)},
+      {name:'jsDelivr CDN', url:subUrlAlt(cfg)},
+      {name:'国内加速线路', url:subUrlProxy(cfg)}
+    ];
+  }
+  // 单条线路探测：先按常规请求（能读到状态码）；若被跨域策略挡回，再用 no-cors 复测一次，
+  // 以此区分「服务器真不可达」与「只是没给跨域头」——后者对 iOS 原生订阅毫无影响。
+  function icsProbe(url){
+    var t0=Date.now();
+    return fetch(url, {cache:'no-store'})
+      .then(function(r){ return {ok:r.ok, code:r.status, ms:Date.now()-t0}; })
+      .catch(function(){
+        return fetch(url, {mode:'no-cors', cache:'no-store'})
+          .then(function(){ return {ok:true, code:'通（跨域受限）', ms:Date.now()-t0}; })
+          .catch(function(){ return {ok:false, code:'连不上', ms:Date.now()-t0}; });
+      });
+  }
+  // 在用户自己的网络里跑，测出哪条线路能通并自动选中 —— 不必再靠猜
+  function icsTestAll(){
+    var cfg=ghCfg();
+    if(!ghReady(cfg)){ icsTipSet('请先保存配置', true); return; }
+    var list=icsLines(cfg), res=[], done=0, best=null;
+    icsTipSet('正在测试三条线路…');
+    list.forEach(function(it, i){
+      icsProbe(it.url).then(function(r){
+        res[i]={name:it.name, url:it.url, ok:r.ok, code:r.code, ms:r.ms};
+        if(r.ok && !best) best=res[i];
+        done++;
+        if(done<list.length){ icsTipSet('正在测试…（'+done+'/'+list.length+'）'); return; }
+        var txt=res.map(function(x){ return x.name+' '+(x.ok ? ('✓ '+x.ms+'ms') : ('✗ '+x.code)); }).join('　·　');
+        if(best){
+          var el=$('icsUrl'); if(el) el.value=best.url;
+          icsTipSet(txt+'　→ 已选用「'+best.name+'」，直接复制去订阅');
+        }else{
+          icsTipSet(txt+'　→ 三条都不通：你的网络访问不了 GitHub。请用「下载日历文件」手动导入。', true);
+        }
+      });
+    });
   }
   function jsdPurge(cfg){
     // jsDelivr 对分支引用有 12 小时边缘缓存。每次上传成功后就调 purge 接口主动失效，
@@ -1578,7 +1626,6 @@
   function renderIcsBox(){
     var cfg=ghCfg();
     var el=$('icsUrl'); if(el){ el.value=subUrlOf(cfg)||''; try{ el.readOnly=true; }catch(e){} }
-    var alt=$('icsUrlAlt'); if(alt){ alt.value=subUrlGh(cfg)||''; try{ alt.readOnly=true; }catch(e){} }
     var ow=$('icsOwner'); if(ow && !ow.value) ow.value=cfg.owner||GH_DEF_OWNER;
     var rp=$('icsRepo');  if(rp && !rp.value) rp.value=cfg.repo||GH_DEF_REPO;
     var tk=$('icsToken'); if(tk) tk.placeholder = cfg.token ? '已保存，如需更换请重新粘贴' : 'ghp_… 或 github_pat_…';
@@ -1610,6 +1657,7 @@
         if(r.status===200 || r.status===201){
           try{ localStorage.setItem(LS_ICS_H,h); localStorage.setItem(LS_ICS_T,String(Date.now())); localStorage.removeItem(LS_ICS_D); }catch(e){}
           var u=$('icsUrl'); if(u) u.value=subUrlOf(cfg);
+          jsdPurge(cfg); // 顺带刷新 jsDelivr 缓存：若用户切到该线路，能立刻看到新日程
           icsTipSet('已同步 '+built.count+' 条提醒，'+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+'。iPhone 日历会在数小时内自动刷新。');
         }else{
           return r.text().then(function(t){
@@ -1879,23 +1927,20 @@
       ghSyncICS(true);
     });
     var icY=$('icsSync'); if(icY) icY.addEventListener('click', function(){ ghSyncICS(true); });
+    var icE=$('icsTest'); if(icE) icE.addEventListener('click', function(){ icsTestAll(); });
     var icC=$('icsCopy'); if(icC) icC.addEventListener('click', function(){
-      var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
+      // 优先复制「测试后选中的线路」，没有再回退默认线路
+      var u=($('icsUrl')&&$('icsUrl').value)||subUrlOf(ghCfg());
+      if(!u){ icsTipSet('请先保存配置', true); return; }
       copyText(u, function(ok){
-        icsTipSet(ok ? '推荐地址已复制。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 粘贴'
-                     : '复制失败，请长按上方输入框手动复制', !ok);
-      });
-    });
-    var icA=$('icsCopyAlt'); if(icA) icA.addEventListener('click', function(){
-      var u=subUrlGh(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
-      copyText(u, function(ok){
-        icsTipSet(ok ? '备用地址已复制。两条地址内容完全相同，只是 iPhone 访问时走的网络路径不同'
+        icsTipSet(ok ? '地址已复制。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 粘贴（粘贴前先清空输入框）'
                      : '复制失败，请长按上方输入框手动复制', !ok);
       });
     });
     var icW=$('icsWebcal'); if(icW) icW.addEventListener('click', function(){
-      var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
-      // 交给系统日历去订阅；若本机网络连不上该域名，日历会提示 validation failed，改用备用地址即可
+      var u=($('icsUrl')&&$('icsUrl').value)||subUrlOf(ghCfg());
+      if(!u){ icsTipSet('请先保存配置', true); return; }
+      // 交给系统日历去订阅；若本机网络连不上该域名会提示 validation failed，先用「测试哪条能通」换线路
       location.href='webcal://'+u.replace(/^https?:\/\//,'');
     });
     renderIcsBox();
