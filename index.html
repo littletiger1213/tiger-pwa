@@ -422,7 +422,7 @@
               <button class="btn" id="icsSave">保存并同步</button>
               <button class="btn line" id="icsSync">立即同步</button>
             </div>
-            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">两条线路，日历内容完全相同，只是 iPhone 访问时走的网络不同。若订阅时提示 validation failed / 无法验证账户信息 / 不安全连接，先点下面的「测试哪条能通」，它会自动切到能连通的那条。</span></div>
+            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"><span style="color:var(--muted); font-size:11px; line-height:1.6">四条线路，日历内容完全相同，只是 iPhone 访问时走的网络不同。先点「测试哪条能通」，再点每条右边的「验证」逐条确认，最后用确定能通的那条去订阅。</span></div>
             <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
               <button class="btn line sm" id="icsTest">测试哪条能通</button>
               <button class="btn line sm" id="icsCopy">复制订阅地址</button>
@@ -436,7 +436,8 @@
                 ② iPhone：<b>设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历</b><br>
                 ③ 把输入框<b>清空</b>再粘贴（避免变成 webcal://https://… 叠加）<br>
                 ④ 点「下一步」→「存储」<br>
-                ⑤ 最后去 <b>设置 → 日历 → 账户 → 获取新数据</b>，把刷新改成「每 15 分钟」或「每小时」，新日程才会及时进手机。
+                ⑤ 最后去 <b>设置 → 日历 → 账户 → 获取新数据</b>，把刷新改成「每 15 分钟」或「每小时」，新日程才会及时进手机。<br>
+                <b>关于「验证」的判读：</b>点「验证」能看到一堆文字（开头 <code>BEGIN:VCALENDAR</code>）= 这条通 ✅；一片空白或报错 = 不通 ❌。<b>注意</b>：如果你直接打开 <code>.ics</code> 看到空白，那是 iOS 的规定（Safari 不显示 <code>text/calendar</code>），不能据此判断不通——所以「验证」按钮会打开同一个文件的纯文本版。
               </div>
             </div>
             <div class="field" style="grid-column:1/-1"><span id="icsTip" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
@@ -1649,7 +1650,7 @@
         var el=$('icsUrl'); if(el) el.value=best.url;
         icsTipSet(txt+'　→ 已选用「'+best.name+'」。点「复制订阅地址」，再去 iPhone 设置里手动添加。');
       }else{
-        icsTipSet(txt+'　→ 四条都不通：当前网络连不上这些域名。请看下方「直接打开验证」逐条点开确认；若确实都打不开，改用「下载日历文件」手动导入。', true);
+        icsTipSet(txt+'　→ 四条都不通：当前网络连不上这些域名。请点下方每条的「验证」逐条确认；若确实都打不开，改用「下载日历文件」手动导入。', true);
       }
       icsDirectSet(res);
     }
@@ -1671,16 +1672,22 @@
       });
     });
   }
-  // 把每条线路做成可点击的直链 + 一键复制。
+  // 把每条线路做成「验证链接 + 复制订阅地址」。
   // 为什么必须有：网页里的 fetch 能通，**不等于** iOS 日历进程能通（dataaccessd 可能走另一条网络通道）。
-  // 唯一可靠的判断是「在 Safari 里直接打开，能看到 BEGIN:VCALENDAR 文字」。
-  // 所以流程是：逐条点开验证 → 哪条能显示文字 → 点它右边的「复制」→ 去 iPhone 设置里粘贴订阅。
+  //
+  // ⚠️ 2026-09-14 重要修正：**不能拿 .ics 直链去 Safari 里"看文字"** ——
+  //   iOS Safari 不渲染 `text/calendar`，打开只会是一片空白（或直接下载），
+  //   于是"看到 BEGIN:VCALENDAR 才算通"这个判据本身是坏的，会让人误判成"网络不通"。
+  //   解法：仓库里放了一份**内容完全相同、只是扩展名为 .txt** 的孪生文件（GitHub Pages 以 text/plain 提供），
+  //   点它 Safari 一定会把文字显示出来 —— 这才是可靠的可达性判据。
+  //   订阅时仍然用 .ics（Content-Type: text/calendar 是 iOS 订阅必需的）。
   var ICS_LINES=[];
+  function verifyUrlOf(u){ return String(u||'').replace(/\.ics(\?.*)?$/i, '.txt'); }
   function icsCopyLine(i){
     var it=ICS_LINES[i]; if(!it||!it.url) return;
     var el=$('icsUrl'); if(el) el.value=it.url;
     copyText(it.url, function(ok){
-      icsTipSet(ok ? ('已复制「'+it.name+'」的地址。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 先清空输入框再粘贴')
+      icsTipSet(ok ? ('已复制「'+it.name+'」的订阅地址。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 先清空输入框再粘贴')
                    : '复制失败，请长按上方输入框手动复制', !ok);
     });
   }
@@ -1688,14 +1695,16 @@
     var el=$('icsDirect'); if(!el) return;
     ICS_LINES=[];
     if(!res||!res.length){ el.innerHTML=''; return; }
-    var h='<div style="font-weight:700;font-size:12px;margin-bottom:3px;color:var(--ink,#1C1C1E)">直接打开验证（点一条，能在 Safari 里看到一堆文字 = 这条真的通；通的那条再点右边「复制」去订阅）</div>';
+    var h='<div style="font-weight:700;font-size:12px;margin-bottom:3px;color:var(--ink,#1C1C1E)">逐条验证（点「验证」能在 Safari 里看到文字 = 这条真的通；通的那条再点「复制订阅地址」）</div>';
+    h+='<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:5px">验证链接打开的是同一个文件的纯文本版（.txt），因为 iOS Safari 不会把 .ics 当文字显示，打开只会是一片空白，看不出通不通。</div>';
     res.forEach(function(x){
       var u=String(x.url||'').replace(/["'<>]/g,'');
-      var n=(x.ok?'✓ ':'○ ')+x.name;
+      var v=verifyUrlOf(u);
       var idx=ICS_LINES.push({name:x.name, url:u})-1;
-      h+='<div style="font-size:12px;line-height:1.95;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
-           '<a href="'+u+'" target="_blank" rel="noopener" style="color:#185FA5;word-break:break-all;flex:1 1 auto">'+n+'</a>'+
-           '<button type="button" class="btn line sm" data-icsline="'+idx+'" style="min-height:28px;padding:3px 10px;font-size:12px">复制</button>'+
+      h+='<div style="font-size:12px;line-height:1.95;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line,#e5e5e5);padding-top:5px;margin-top:5px">'+
+           '<span style="flex:1 1 60px">'+(x.ok?'✓ ':'○ ')+x.name+'</span>'+
+           '<a href="'+v+'" target="_blank" rel="noopener" class="btn line sm" style="min-height:28px;padding:3px 10px;font-size:12px;text-decoration:none">验证</a>'+
+           '<button type="button" class="btn line sm" data-icsline="'+idx+'" style="min-height:28px;padding:3px 10px;font-size:12px">复制订阅地址</button>'+
          '</div>';
     });
     el.innerHTML=h;
@@ -1732,6 +1741,19 @@
     else if(last) icsTipSet('上次同步：'+new Date(last).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}));
     else icsTipSet('已配置，等待首次同步…');
   }
+  // 往仓库写一个文件（先 GET 拿 sha，再 PUT）。返回 fetch 的 Response，交给调用方判状态码。
+  function putCalFile(cfg, path, text, branch){
+    var headers={'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+    var api='https://api.github.com/repos/'+cfg.owner+'/'+cfg.repo+'/contents/'+encodeURIComponent(path);
+    return fetch(api+'?ref='+encodeURIComponent(branch), {headers:headers, cache:'no-store'})
+      .then(function(r){ return r.status===200 ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(meta){
+        var body={message:'calendar sync', content:b64utf8(text), branch:branch};
+        if(meta && meta.sha) body.sha=meta.sha;
+        return fetch(api, {method:'PUT', headers:headers, body:JSON.stringify(body)});
+      });
+  }
   function ghSyncICS(force){
     var cfg=ghCfg();
     if(!ghReady(cfg)){ if(force) icsTipSet('请先填写令牌、用户名、仓库并保存', true); return; }
@@ -1740,29 +1762,22 @@
     var h=strHash(ics.replace(/DTSTAMP:[0-9TZ]+/g,'')); // DTSTAMP 每次都变，比对时剔除，否则会无谓重复上传
     if(!force && localStorage.getItem(LS_ICS_H)===h){ try{ localStorage.removeItem(LS_ICS_D); }catch(e){} return; }
     var path=icsPathOf(cfg), branch=cfg.branch||GH_DEF_BRANCH;
-    var api='https://api.github.com/repos/'+cfg.owner+'/'+cfg.repo+'/contents/'+encodeURIComponent(path);
-    var headers={'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+    var txtPath=path.replace(/\.ics$/i,'.txt');   // 纯文本孪生：供「验证」按钮在 Safari 里看文字用
     icsTipSet('正在同步日历…');
-    fetch(api+'?ref='+encodeURIComponent(branch), {headers:headers, cache:'no-store'})
-      .then(function(r){ return r.status===200 ? r.json() : null; })
-      .catch(function(){ return null; })
-      .then(function(meta){
-        var body={message:'calendar sync', content:b64utf8(ics), branch:branch};
-        if(meta && meta.sha) body.sha=meta.sha;
-        return fetch(api, {method:'PUT', headers:headers, body:JSON.stringify(body)});
-      })
+    putCalFile(cfg, path, ics, branch)
       .then(function(r){
-        if(r.status===200 || r.status===201){
-          try{ localStorage.setItem(LS_ICS_H,h); localStorage.setItem(LS_ICS_T,String(Date.now())); localStorage.removeItem(LS_ICS_D); }catch(e){}
-          var u=$('icsUrl'); if(u) u.value=subUrlOf(cfg);
-          jsdPurge(cfg); // 顺带刷新 jsDelivr 缓存：若用户切到该线路，能立刻看到新日程
-          icsTipSet('已同步 '+built.count+' 条提醒，'+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+'。iPhone 日历会在数小时内自动刷新。');
-        }else{
+        if(r.status!==200 && r.status!==201){
           return r.text().then(function(t){
             var m=''; try{ m=JSON.parse(t).message||''; }catch(e){ m=String(t).slice(0,140); }
             icsTipSet('同步失败（HTTP '+r.status+'）：'+(m||'请确认令牌有该仓库的 Contents 读写权限'), true);
           });
         }
+        try{ localStorage.setItem(LS_ICS_H,h); localStorage.setItem(LS_ICS_T,String(Date.now())); localStorage.removeItem(LS_ICS_D); }catch(e){}
+        var u=$('icsUrl'); if(u) u.value=subUrlOf(cfg);
+        jsdPurge(cfg); // 顺带刷新 jsDelivr 缓存：若用户切到该线路，能立刻看到新日程
+        icsTipSet('已同步 '+built.count+' 条提醒，'+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+'。iPhone 日历会在数小时内自动刷新。');
+        // 顺带更新纯文本孪生，保持与 .ics 同内容；失败不影响订阅（它只用于可达性验证）
+        putCalFile(cfg, txtPath, ics, branch).then(function(){}, function(){});
       })
       .catch(function(e){ icsTipSet('同步失败：'+((e&&e.message)||'网络异常'), true); });
   }
