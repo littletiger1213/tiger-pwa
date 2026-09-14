@@ -403,10 +403,31 @@
             <div data-page-node-id="pk4xCwvi29ifg8zdaSw54N" class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
               <button data-page-node-id="bKsnXII7d2gMVULklhYAAP" class="btn" id="notifEnable"><!--pnid:3NMSxwRaRnyw8EFSuWE2cW-->开启手机通知</button>
               <button data-page-node-id="T6zmOBMczncobIhOcra5Og" class="btn line" id="notifTest"><!--pnid:yi42x8trNs15aycUaWgzwe-->发测试通知</button>
-              <button data-page-node-id="mQ8JkgxRzDFJh2xMFWLCmr" class="btn line" id="icsExport"><!--pnid:7rppV2Vj0qcBajlNkfSr9J-->同步到手机日历</button>
+              <button data-page-node-id="mQ8JkgxRzDFJh2xMFWLCmr" class="btn line" id="icsExport"><!--pnid:7rppV2Vj0qcBajlNkfSr9J-->下载日历文件</button>
             </div>
             <div data-page-node-id="6JKSSKVxO5ob2dRpEqZjwm" class="field" style="grid-column:1/-1"><span data-page-node-id="f6FQ5ZnfQAMc1hKALjo6oJ" id="notifStatus" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
-            <div data-page-node-id="fPH1L9KHe87juwSQ4NJ0vV" class="field" style="grid-column:1/-1"><span data-page-node-id="p83VWJW4wSB0WXwcWAxnoL" style="color:var(--muted); font-size:12px; line-height:1.6"><!--pnid:VaU52eCtWXeZhtngFrYuyb-->iPhone 在后台会暂停网页运行，所以「网页通知」只在你打开工作台时送达。<b data-page-node-id="KZuSYDbKmeGxRYn5CcnMvz"><!--pnid:FZbXJFZJEYNQPr2Hbcjcax-->要让提醒到点必响</b><!--pnid:V5XCQa4HV6SY8YEbkR6fbW-->，点「同步到手机日历」下载文件并在 iPhone 打开，提醒会写入系统日历，由 iPhone 原生推送——不需要打开工作台，也不会被系统暂停。</span></div>
+            <div class="field" style="grid-column:1/-1"><span style="color:var(--muted); font-size:12px; line-height:1.6">iPhone 在后台会暂停网页运行，所以「网页通知」只在你打开工作台时送达。<b>要让提醒到点必响</b>，用下面的「日历订阅同步」：把日程自动发布到一个私密地址，在 iPhone 日历里订阅一次，之后到点由系统原生推送——<b>不用打开工作台、锁屏也响、改日程自动更新</b>。不想配置也可点「下载日历文件」手动导入。</span></div>
+          </div>
+          <div class="form-grid" style="padding-top:6px">
+            <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <button class="btn line" id="icsToggle">日历订阅同步</button>
+              <span style="color:var(--muted); font-size:12px">没打开工作台也能到点响铃</span>
+            </div>
+          </div>
+          <div class="form-grid hide" id="icsForm">
+            <div class="field" style="grid-column:1/-1"><label>GitHub 访问令牌（需 Contents 读写权限）</label><input id="icsToken" type="password" placeholder="ghp_… 或 github_pat_…"><span style="color:var(--muted); font-size:11px">仅保存在你手机本机，用于把日历文件上传到你自己的仓库，不会发给任何第三方</span></div>
+            <div class="field"><label>GitHub 用户名</label><input id="icsOwner" placeholder="littletiger1213"></div>
+            <div class="field"><label>仓库名</label><input id="icsRepo" placeholder="tiger-pwa"></div>
+            <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <button class="btn" id="icsSave">保存并同步</button>
+              <button class="btn line" id="icsSync">立即同步</button>
+            </div>
+            <div class="field" style="grid-column:1/-1"><label>iPhone 订阅地址</label><input id="icsUrl" readonly placeholder="配置保存后自动生成"></div>
+            <div class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+              <button class="btn line sm" id="icsCopy">复制订阅地址</button>
+              <button class="btn line sm" id="icsWebcal">在日历 App 中订阅</button>
+            </div>
+            <div class="field" style="grid-column:1/-1"><span id="icsTip" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
           </div>
         </div>
         <div data-page-node-id="ExdQYya8wLnCYPskFD9i4G" id="todoGroups"></div>
@@ -470,6 +491,14 @@
   var LS_LAYOUT = "wb_hutou_layout_v1";
   var LS_BKA = "wb_bk_auto_v1";
   var AUTO_BK_MS = 24*3600*1000;
+  // 系统日历订阅同步（让 iPhone 在「工作台未打开」时也能到点响铃）
+  var LS_GHC = "wb_hutou_ghc_v1";     // {token, owner, repo, branch, path}
+  var LS_ICS_H = "wb_hutou_ics_hash_v1"; // 上次成功上传的日历内容哈希
+  var LS_ICS_T = "wb_hutou_ics_time_v1"; // 上次成功上传的时间戳
+  var LS_ICS_D = "wb_hutou_ics_dirty_v1"; // 数据变更标记
+  var GH_DEF_OWNER = "littletiger1213";
+  var GH_DEF_REPO = "tiger-pwa";
+  var GH_DEF_BRANCH = "main";
   var NEWS_LAYOUT = (function(){ try{ return localStorage.getItem(LS_LAYOUT)||'row'; }catch(e){ return 'row'; } })();
 
   // ---------- helpers ----------
@@ -1002,7 +1031,7 @@
       return Promise.all(del);
     }).catch(function(){}).then(function(){ snap={}; });
   }
-  function persist(){ saveLocal(); if(cloudDB()){ pushToCloud(); } else { setSync('offline'); } }
+  function persist(){ saveLocal(); icsScheduleSync(); if(cloudDB()){ pushToCloud(); } else { setSync('offline'); } }
 
   // ---------- seed examples ----------
   function seed(){
@@ -1183,6 +1212,8 @@
     // 联网时自动刷新财经数据（重要动态按日轮换，不在此处轮转）
     if(typeof navigator!=='undefined' && navigator.onLine!==false){ renderCurrentNews(); refreshMarket(); }
     initReminders();
+    renderIcsBox();
+    if(ghReady(ghCfg())) ghSyncICS(false); // 打开时若日历有变化则自动同步到网上
   }
 
   // ---------- rendering ----------
@@ -1380,7 +1411,7 @@
   }
 
   // ---------- 提醒引擎 ----------
-  var REM_CATCHUP_MS = 6*3600*1000; // 补发窗口：提醒时刻过后6小时内，打开页面仍会补发
+  var REM_CATCHUP_MS = 24*3600*1000; // 补发窗口：提醒时刻过后24小时内，打开页面仍会补发
   function notifSupported(){ return ('Notification' in window); }
   function isStandalonePWA(){
     try{ return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone===true; }catch(e){ return false; }
@@ -1487,6 +1518,107 @@
       toast('已导出 '+r.count+' 条提醒。在 iPhone 打开该文件加入日历后，到点由系统推送（无需打开工作台）');
     }catch(e){ toast('导出失败：'+e.message); }
   }
+  // ---------- 日历订阅同步：发布到网上，iPhone 订阅后由系统原生推送（工作台未打开也能响） ----------
+  function ghCfg(){ try{ return JSON.parse(localStorage.getItem(LS_GHC)||'{}')||{}; }catch(e){ return {}; } }
+  function ghSave(cfg){ try{ localStorage.setItem(LS_GHC, JSON.stringify(cfg)); }catch(e){} }
+  function ghReady(cfg){ return !!(cfg && cfg.token && cfg.owner && cfg.repo); }
+  function randPath(){
+    var a='abcdefghijkmnpqrstuvwxyz23456789', s='';
+    for(var i=0;i<20;i++) s+=a.charAt(Math.floor(Math.random()*a.length));
+    return 'cal-'+s+'.ics';
+  }
+  function icsPathOf(cfg){
+    if(!cfg.path){ cfg.path=randPath(); ghSave(cfg); }
+    return cfg.path;
+  }
+  function strHash(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return h.toString(36)+'-'+s.length.toString(36); }
+  function b64utf8(s){
+    try{
+      var b=new TextEncoder().encode(s), bin='', c=0x8000, i;
+      for(i=0;i<b.length;i+=c) bin+=String.fromCharCode.apply(null, b.subarray(i,i+c));
+      return btoa(bin);
+    }catch(e){ return btoa(unescape(encodeURIComponent(s))); }
+  }
+  function subUrlOf(cfg){
+    cfg=cfg||ghCfg();
+    if(!ghReady(cfg)) return '';
+    return 'https://'+cfg.owner+'.github.io/'+cfg.repo+'/'+icsPathOf(cfg);
+  }
+  function icsTipSet(msg, bad){
+    var el=$('icsTip'); if(!el) return;
+    el.textContent=msg||'';
+    el.style.color = bad ? '#c0392b' : 'var(--muted)';
+  }
+  function icsMarkDirty(){ try{ localStorage.setItem(LS_ICS_D,'1'); }catch(e){} }
+  var icsTimer=null;
+  function icsScheduleSync(){
+    icsMarkDirty();
+    if(icsTimer) return;
+    icsTimer=setTimeout(function(){ icsTimer=null; if(ghReady(ghCfg())) ghSyncICS(false); }, 8000);
+  }
+  function renderIcsBox(){
+    var cfg=ghCfg();
+    var el=$('icsUrl'); if(el) el.value=subUrlOf(cfg)||'';
+    var ow=$('icsOwner'); if(ow && !ow.value) ow.value=cfg.owner||GH_DEF_OWNER;
+    var rp=$('icsRepo');  if(rp && !rp.value) rp.value=cfg.repo||GH_DEF_REPO;
+    var tk=$('icsToken'); if(tk) tk.placeholder = cfg.token ? '已保存，如需更换请重新粘贴' : 'ghp_… 或 github_pat_…';
+    var last=parseInt(localStorage.getItem(LS_ICS_T)||'0',10);
+    if(!cfg.token) icsTipSet('未配置。填写 GitHub 令牌后即可自动同步日历。');
+    else if(last) icsTipSet('上次同步：'+new Date(last).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}));
+    else icsTipSet('已配置，等待首次同步…');
+  }
+  function ghSyncICS(force){
+    var cfg=ghCfg();
+    if(!ghReady(cfg)){ if(force) icsTipSet('请先填写令牌、用户名、仓库并保存', true); return; }
+    var built=buildICS();
+    var ics=built.text;                 // 上传版不带 BOM，避免 iOS 订阅解析异常
+    var h=strHash(ics.replace(/DTSTAMP:[0-9TZ]+/g,'')); // DTSTAMP 每次都变，比对时剔除，否则会无谓重复上传
+    if(!force && localStorage.getItem(LS_ICS_H)===h){ try{ localStorage.removeItem(LS_ICS_D); }catch(e){} return; }
+    var path=icsPathOf(cfg), branch=cfg.branch||GH_DEF_BRANCH;
+    var api='https://api.github.com/repos/'+cfg.owner+'/'+cfg.repo+'/contents/'+encodeURIComponent(path);
+    var headers={'Authorization':'Bearer '+cfg.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'};
+    icsTipSet('正在同步日历…');
+    fetch(api+'?ref='+encodeURIComponent(branch), {headers:headers, cache:'no-store'})
+      .then(function(r){ return r.status===200 ? r.json() : null; })
+      .catch(function(){ return null; })
+      .then(function(meta){
+        var body={message:'calendar sync', content:b64utf8(ics), branch:branch};
+        if(meta && meta.sha) body.sha=meta.sha;
+        return fetch(api, {method:'PUT', headers:headers, body:JSON.stringify(body)});
+      })
+      .then(function(r){
+        if(r.status===200 || r.status===201){
+          try{ localStorage.setItem(LS_ICS_H,h); localStorage.setItem(LS_ICS_T,String(Date.now())); localStorage.removeItem(LS_ICS_D); }catch(e){}
+          var u=$('icsUrl'); if(u) u.value=subUrlOf(cfg);
+          icsTipSet('已同步 '+built.count+' 条提醒，'+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})+'。iPhone 日历会在数小时内自动刷新。');
+        }else{
+          return r.text().then(function(t){
+            var m=''; try{ m=JSON.parse(t).message||''; }catch(e){ m=String(t).slice(0,140); }
+            icsTipSet('同步失败（HTTP '+r.status+'）：'+(m||'请确认令牌有该仓库的 Contents 读写权限'), true);
+          });
+        }
+      })
+      .catch(function(e){ icsTipSet('同步失败：'+((e&&e.message)||'网络异常'), true); });
+  }
+  function fallbackCopy(txt){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=txt; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.left='-9999px';
+      document.body.appendChild(ta); ta.select();
+      var ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }catch(e){ return false; }
+  }
+  function copyText(txt, cb){
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(function(){ if(cb) cb(true); }, function(){ if(cb) cb(fallbackCopy(txt)); });
+        return;
+      }
+    }catch(e){}
+    if(cb) cb(fallbackCopy(txt));
+  }
   var firedRem = {};
   function loadFired(){ try{ firedRem=JSON.parse(localStorage.getItem(LS_REM)||'{}'); }catch(e){ firedRem={}; } }
   function saveFired(){ try{ localStorage.setItem(LS_REM, JSON.stringify(firedRem)); }catch(e){} }
@@ -1494,7 +1626,7 @@
     var now=Date.now();
     var today=todayStr();
     var winEnd=addDays(today,8);
-    var winStart=addDays(today,-1);
+    var winStart=addDays(today,-3);
     schedules().forEach(function(s){
       if(s.done) return;
       allOccurrences(s, winStart, winEnd).forEach(function(o){
@@ -1653,7 +1785,7 @@
     loadFired(); checkReminders();
     if(typeof setInterval==='function') setInterval(checkReminders, 30000);
     try{
-      document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFired(); checkReminders(); refreshNotifStatus(); autoBackupIfNeeded(); } });
+      document.addEventListener('visibilitychange', function(){ if(!document.hidden){ loadFired(); checkReminders(); refreshNotifStatus(); autoBackupIfNeeded(); if(ghReady(ghCfg())) ghSyncICS(false); } });
       window.addEventListener('pageshow', function(){ loadFired(); checkReminders(); });
     }catch(e){}
     refreshNotifStatus();
@@ -1708,6 +1840,37 @@
     var nE=$('notifEnable'); if(nE) nE.addEventListener('click', function(){ enableNotif(); });
     var nT=$('notifTest');   if(nT) nT.addEventListener('click', function(){ sendTestNotif(); });
     var nI=$('icsExport');   if(nI) nI.addEventListener('click', function(){ exportICS(); });
+    // 日历订阅同步（GitHub 发布 + iPhone 订阅 → 未打开工作台也能到点响）
+    var icT=$('icsToggle'); if(icT) icT.addEventListener('click', function(){
+      var f=$('icsForm'); if(!f) return;
+      f.classList.toggle('hide');
+      if(!f.classList.contains('hide')) renderIcsBox();
+    });
+    var icS=$('icsSave'); if(icS) icS.addEventListener('click', function(){
+      var cfg=ghCfg();
+      var tk=($('icsToken')&&$('icsToken').value||'').trim(); if(tk) cfg.token=tk;
+      cfg.owner=(($('icsOwner')&&$('icsOwner').value)||'').trim()||GH_DEF_OWNER;
+      cfg.repo =(($('icsRepo')&&$('icsRepo').value)||'').trim()||GH_DEF_REPO;
+      if(!cfg.branch) cfg.branch=GH_DEF_BRANCH;
+      ghSave(cfg);
+      if(!ghReady(cfg)){ icsTipSet('请填写 GitHub 令牌', true); return; }
+      if($('icsToken')) $('icsToken').value='';
+      renderIcsBox();
+      ghSyncICS(true);
+    });
+    var icY=$('icsSync'); if(icY) icY.addEventListener('click', function(){ ghSyncICS(true); });
+    var icC=$('icsCopy'); if(icC) icC.addEventListener('click', function(){
+      var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
+      copyText(u, function(ok){
+        icsTipSet(ok ? '订阅地址已复制。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历'
+                     : '复制失败，请长按上方输入框手动复制', !ok);
+      });
+    });
+    var icW=$('icsWebcal'); if(icW) icW.addEventListener('click', function(){
+      var u=subUrlOf(ghCfg()); if(!u){ icsTipSet('请先保存配置', true); return; }
+      location.href='webcal://'+u.replace(/^https?:\/\//,'');
+    });
+    renderIcsBox();
     refreshNotifStatus();
     document.querySelectorAll('.nav-btn').forEach(function(b){ b.addEventListener('click',function(){ switchView(b.getAttribute('data-view')); document.querySelectorAll('.nav-sub').forEach(function(x){ x.classList.remove('active'); }); }); });
     document.querySelectorAll('.nav-sub').forEach(function(b){
