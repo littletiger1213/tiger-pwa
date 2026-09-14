@@ -1,13 +1,17 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
- * v17：日历订阅改为「三线路 + 一键测速」——默认 GitHub 直连，可切 jsDelivr / 国内加速反代。
- * v16：日历订阅地址改用 jsDelivr（国内可达）+ 同步后主动清 CDN 缓存。
- * v15 关键修复：HTML 改为 network-first。
+ * v18 关键修复：删除「嵌套 URL」订阅线路 —— https://gh-proxy.com/https://raw.githubusercontent.com/…
+ *      这种 URL 里再套一个完整 https 地址的写法，浏览器 fetch 能跑，但 iOS 日历订阅进程
+ *      (dataaccessd) 的 URL 解析器不认内层协议头，会直接抛 "cannot connect using SSL"。
+ *      现只保留单层、干净的 https 地址。
+ * v17：日历订阅改为「多线路 + 一键测速」，默认 GitHub 直连。
+ * v16：日历订阅地址曾改用 jsDelivr + 同步后主动清 CDN 缓存。
+ * v15：HTML 改为 network-first。
  * 旧版(v14)对 index.html 用 cache-first，且各版本 sw.js 字节完全相同，
  * 导致浏览器认为 SW 无更新，PWA 被永久锁死在首次安装时缓存的旧页面，
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v17';
+const CACHE = 'wb-pwa-v18';
 const ASSETS = [
   './',
   './index.html',
