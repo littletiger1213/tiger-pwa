@@ -699,12 +699,16 @@
   // ---------- 联网自动刷新（重要动态 / 财经数据） ----------
   var PROXIES = ['https://api.allorigins.win/raw?url=','https://api.codetabs.com/v1/proxy/?quest='];
 
-  function fetchWithTimeout(url, ms){
+  // ms 到点强制中断；opt 可追加 fetch 选项（如 {mode:'no-cors'}）。默认 no-store。
+  function fetchWithTimeout(url, ms, opt){
+    var o={cache:'no-store'}, k;
+    if(opt){ for(k in opt){ if(Object.prototype.hasOwnProperty.call(opt,k)) o[k]=opt[k]; } }
     if(typeof AbortController==='function'){
       var ctrl=new AbortController(); var id=setTimeout(function(){ctrl.abort();},ms);
-      return fetch(url,{signal:ctrl.signal,cache:'no-store'}).then(function(r){clearTimeout(id);return r;},function(e){clearTimeout(id);throw e;});
+      o.signal=ctrl.signal;
+      return fetch(url,o).then(function(r){clearTimeout(id);return r;},function(e){clearTimeout(id);throw e;});
     }
-    return fetch(url,{cache:'no-store'});
+    return fetch(url,o);
   }
 
   // ----- 重要动态 -----
@@ -1602,53 +1606,97 @@
       {name:'gitHack',      url:subUrlHack(cfg)}
     ];
   }
-  // 单条线路探测：先按常规请求（能读到状态码）；若被跨域策略挡回，再用 no-cors 复测一次，
+  // 单条线路探测。**必须带硬超时**：
+  // iOS Safari 的 fetch 默认超时长达 1~3 分钟，只要有一条线路静默挂起（既不回包也不报错），
+  // 「测试哪条能通」就会永远停在中间（曾实测卡在 3/4 不动）。用 AbortController 强制 6 秒收口。
+  // 先按常规请求（能读到状态码）；若被跨域策略挡回，再用 no-cors 复测一次，
   // 以此区分「服务器真不可达」与「只是没给跨域头」——后者对 iOS 原生订阅毫无影响。
+  var ICS_PROBE_MS=6000;
   function icsProbe(url){
     var t0=Date.now();
-    return fetch(url, {cache:'no-store'})
+    return fetchWithTimeout(url, ICS_PROBE_MS)
       .then(function(r){ return {ok:r.ok, code:r.status, ms:Date.now()-t0}; })
       .catch(function(){
-        return fetch(url, {mode:'no-cors', cache:'no-store'})
+        // 若上一次已经耗尽预算（多为超时中断），不再重试，直接记为超时
+        if(Date.now()-t0 >= ICS_PROBE_MS-150) return {ok:false, code:'超时', ms:Date.now()-t0};
+        return fetchWithTimeout(url, ICS_PROBE_MS, {mode:'no-cors'})
           .then(function(){ return {ok:true, code:'通（跨域受限）', ms:Date.now()-t0}; })
-          .catch(function(){ return {ok:false, code:'连不上', ms:Date.now()-t0}; });
+          .catch(function(){
+            var to=Date.now()-t0 >= ICS_PROBE_MS-150;
+            return {ok:false, code:(to?'超时':'连不上'), ms:Date.now()-t0};
+          });
       });
   }
   // 在用户自己的网络里跑，测出哪条线路能通并自动选中 —— 不必再靠猜
+  var ICS_TEST_TIMER=null;
   function icsTestAll(){
     var cfg=ghCfg();
     if(!ghReady(cfg)){ icsTipSet('请先保存配置', true); return; }
-    var list=icsLines(cfg), res=[], done=0, best=null;
+    var list=icsLines(cfg), res=[], done=0, finished=false;
     icsDirectSet(null);
-    icsTipSet('正在测试 '+list.length+' 条线路…');
+    icsTipSet('正在测试 '+list.length+' 条线路…（每条最多 '+(ICS_PROBE_MS/1000)+' 秒）');
+    // 收口：补齐未返回的、按线路顺序挑第一条能通的、渲染结果。任何情况下只执行一次。
+    function settle(){
+      if(finished) return; finished=true;
+      if(ICS_TEST_TIMER){ clearTimeout(ICS_TEST_TIMER); ICS_TEST_TIMER=null; }
+      var i, best=null;
+      for(i=0;i<list.length;i++){
+        if(!res[i]) res[i]={name:list[i].name, url:list[i].url, ok:false, code:'超时', ms:ICS_PROBE_MS};
+        if(!best && res[i].ok) best=res[i];   // 顺序即优先级，先挑编号靠前的
+      }
+      var txt=res.map(function(x){ return x.name+' '+(x.ok ? ('✓ '+x.ms+'ms') : ('✗ '+x.code)); }).join('　·　');
+      if(best){
+        var el=$('icsUrl'); if(el) el.value=best.url;
+        icsTipSet(txt+'　→ 已选用「'+best.name+'」。点「复制订阅地址」，再去 iPhone 设置里手动添加。');
+      }else{
+        icsTipSet(txt+'　→ 四条都不通：当前网络连不上这些域名。请看下方「直接打开验证」逐条点开确认；若确实都打不开，改用「下载日历文件」手动导入。', true);
+      }
+      icsDirectSet(res);
+    }
+    // 兜底看门狗：正常情况下 icsProbe 自带 6 秒硬超时，这里是防止极端环境下 fetch 既不 resolve 也不 reject
+    if(ICS_TEST_TIMER) clearTimeout(ICS_TEST_TIMER);
+    ICS_TEST_TIMER=setTimeout(settle, ICS_PROBE_MS*2+2000);
     list.forEach(function(it, i){
       icsProbe(it.url).then(function(r){
         res[i]={name:it.name, url:it.url, ok:r.ok, code:r.code, ms:r.ms};
-        if(r.ok && !best) best=res[i];
         done++;
         if(done<list.length){ icsTipSet('正在测试…（'+done+'/'+list.length+'）'); return; }
-        var txt=res.map(function(x){ return x.name+' '+(x.ok ? ('✓ '+x.ms+'ms') : ('✗ '+x.code)); }).join('　·　');
-        if(best){
-          var el=$('icsUrl'); if(el) el.value=best.url;
-          icsTipSet(txt+'　→ 已选用「'+best.name+'」。点「复制订阅地址」，再去 iPhone 设置里手动添加。');
-        }else{
-          icsTipSet(txt+'　→ 四条都不通：当前网络连不上这些域名。请看下方「直接打开验证」逐条点开确认；若确实都打不开，改用「下载日历文件」手动导入。', true);
-        }
-        icsDirectSet(res);
+        settle();
+      }, function(){
+        // 探测自身异常也计入，绝不让计数卡住
+        res[i]={name:it.name, url:it.url, ok:false, code:'异常', ms:0};
+        done++;
+        if(done<list.length){ icsTipSet('正在测试…（'+done+'/'+list.length+'）'); return; }
+        settle();
       });
     });
   }
-  // 把每条线路做成可点击的直链。
+  // 把每条线路做成可点击的直链 + 一键复制。
   // 为什么必须有：网页里的 fetch 能通，**不等于** iOS 日历进程能通（dataaccessd 可能走另一条网络通道）。
   // 唯一可靠的判断是「在 Safari 里直接打开，能看到 BEGIN:VCALENDAR 文字」。
+  // 所以流程是：逐条点开验证 → 哪条能显示文字 → 点它右边的「复制」→ 去 iPhone 设置里粘贴订阅。
+  var ICS_LINES=[];
+  function icsCopyLine(i){
+    var it=ICS_LINES[i]; if(!it||!it.url) return;
+    var el=$('icsUrl'); if(el) el.value=it.url;
+    copyText(it.url, function(ok){
+      icsTipSet(ok ? ('已复制「'+it.name+'」的地址。iPhone：设置 → 日历 → 账户 → 添加账户 → 其他 → 添加已订阅的日历 → 先清空输入框再粘贴')
+                   : '复制失败，请长按上方输入框手动复制', !ok);
+    });
+  }
   function icsDirectSet(res){
     var el=$('icsDirect'); if(!el) return;
+    ICS_LINES=[];
     if(!res||!res.length){ el.innerHTML=''; return; }
-    var h='<div style="font-weight:700;font-size:12px;margin-bottom:3px;color:var(--ink,#1C1C1E)">直接打开验证（点一条，能在 Safari 里看到一堆文字 = 这条真的通）</div>';
+    var h='<div style="font-weight:700;font-size:12px;margin-bottom:3px;color:var(--ink,#1C1C1E)">直接打开验证（点一条，能在 Safari 里看到一堆文字 = 这条真的通；通的那条再点右边「复制」去订阅）</div>';
     res.forEach(function(x){
       var u=String(x.url||'').replace(/["'<>]/g,'');
-      h+='<div style="font-size:12px;line-height:1.95">'+(x.ok?'✓ ':'○ ')+
-         '<a href="'+u+'" target="_blank" rel="noopener" style="color:#185FA5;word-break:break-all">'+x.name+'</a></div>';
+      var n=(x.ok?'✓ ':'○ ')+x.name;
+      var idx=ICS_LINES.push({name:x.name, url:u})-1;
+      h+='<div style="font-size:12px;line-height:1.95;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+           '<a href="'+u+'" target="_blank" rel="noopener" style="color:#185FA5;word-break:break-all;flex:1 1 auto">'+n+'</a>'+
+           '<button type="button" class="btn line sm" data-icsline="'+idx+'" style="min-height:28px;padding:3px 10px;font-size:12px">复制</button>'+
+         '</div>';
     });
     el.innerHTML=h;
   }
@@ -1978,6 +2026,15 @@
     });
     var icY=$('icsSync'); if(icY) icY.addEventListener('click', function(){ ghSyncICS(true); });
     var icE=$('icsTest'); if(icE) icE.addEventListener('click', function(){ icsTestAll(); });
+    // 「直接打开验证」里的「复制」按钮用事件委托：该区域会整体重绘，且主脚本被 IIFE 包裹，内联 onclick 取不到函数
+    var icD=$('icsDirect'); if(icD) icD.addEventListener('click', function(e){
+      var t=e.target, idx=null;
+      while(t && t!==icD){
+        if(t.getAttribute){ var v=t.getAttribute('data-icsline'); if(v!==null){ idx=v; break; } }
+        t=t.parentNode;
+      }
+      if(idx!==null) icsCopyLine(parseInt(idx,10));
+    });
     var icC=$('icsCopy'); if(icC) icC.addEventListener('click', function(){
       // 优先复制「测试后选中的线路」，没有再回退默认线路
       var u=($('icsUrl')&&$('icsUrl').value)||subUrlOf(ghCfg());
