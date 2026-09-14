@@ -1,4 +1,5 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v17：日历订阅改为「三线路 + 一键测速」——默认 GitHub 直连，可切 jsDelivr / 国内加速反代。
  * v16：日历订阅地址改用 jsDelivr（国内可达）+ 同步后主动清 CDN 缓存。
  * v15 关键修复：HTML 改为 network-first。
  * 旧版(v14)对 index.html 用 cache-first，且各版本 sw.js 字节完全相同，
@@ -6,7 +7,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v16';
+const CACHE = 'wb-pwa-v17';
 const ASSETS = [
   './',
   './index.html',
