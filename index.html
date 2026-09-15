@@ -300,7 +300,7 @@
   <aside data-page-node-id="XPJErTtPLcajkg7Vxfux5S" class="sidebar">
     <div data-page-node-id="e1Ghq7dX3BJEAlGPjRO9rN" class="brand">
       <svg data-page-node-id="Crrjnmwt2sdZg7gUxHtkOm" class="logo" fill="none" viewBox="0 0 40 40"><rect data-page-node-id="kDo3af8m2sTFB1RoiEOfpu" fill="#0d9488" height="34" rx="9" width="34" x="3" y="3"/><path data-page-node-id="ciFMqqdbfKhWbX53e8yFXP" d="M12 21l5 5 11-12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/></svg>
-      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台</small></div>
+      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v25</small></div>
     </div>
     <button data-page-node-id="2DPFX9unuWHNuQESBnA4YZ" class="nav-btn active" data-view="overview"><svg data-page-node-id="YzMQVSqwnPKSaeUzKTWHmr" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="B5NP4vaTKgXcRFahWYZofp" d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ymGy366oh6zu1hKGr24Dh4-->智虎驾驶舱</button>
     <div data-page-node-id="saXsbrEf8pdwORQw5yyQ0r" class="nav-subs" id="navSubs">
@@ -1449,6 +1449,7 @@
   }
   // 澳大利亚全国公共假日（来源：Fair Work Ombudsman 2026 清单）
   // 注：各州补假规则不同，此处只标法定日期本身
+  // 名称一律用官方英文；t = 全称（当日标记气泡里显示），s = 日历格内的短名（格子只有约 9 字符宽）
   function easterSunday(y){
     var a=y%19, b=Math.floor(y/100), c=y%100;
     var d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25);
@@ -1464,16 +1465,16 @@
   var _auCache={};
   function auHolidaysOf(y){
     if(_auCache[y]) return _auCache[y];
-    var m={}, put=function(mo,d,n){ m[y+'-'+pad(mo)+'-'+pad(d)]=n; };
-    put(1,1,'澳洲新年'); put(1,26,'澳洲国庆日');
+    var m={}, put=function(mo,d,n,s){ m[y+'-'+pad(mo)+'-'+pad(d)]={t:n,s:s||n}; };
+    put(1,1,"New Year's Day","New Year"); put(1,26,"Australia Day","Australia");
     var es=easterSunday(y), ed=new Date(y,es[0]-1,es[1]);
-    m[dateStrOf(new Date(ed.getTime()-2*86400000))]='耶稣受难日';
-    m[dateStrOf(new Date(ed.getTime()-86400000))]='复活节周六';
-    m[dateStrOf(ed)]='复活节周日';
-    m[dateStrOf(new Date(ed.getTime()+86400000))]='复活节周一';
-    put(4,25,'澳新军团日');
-    put(6,nthDow(y,6,2,1),'国王诞辰');
-    put(12,25,'澳洲圣诞节'); put(12,26,'节礼日');
+    m[dateStrOf(new Date(ed.getTime()-2*86400000))]={t:"Good Friday",s:"Good Fri"};
+    m[dateStrOf(new Date(ed.getTime()-86400000))]={t:"Easter Saturday",s:"Easter Sat"};
+    m[dateStrOf(ed)]={t:"Easter Sunday",s:"Easter Sun"};
+    m[dateStrOf(new Date(ed.getTime()+86400000))]={t:"Easter Monday",s:"Easter Mon"};
+    put(4,25,"Anzac Day","Anzac");
+    put(6,nthDow(y,6,2,1),"King's Birthday","King's");
+    put(12,25,"Christmas Day","Christmas"); put(12,26,"Boxing Day","Boxing");
     _auCache[y]=m; return m;
   }
   // 某天的全部标记，按优先级：大陆节假日 > 补班 > 节气 > 澳洲
@@ -1484,7 +1485,7 @@
     var tm=solarTermsOf(y)[ds];
     if(tm) out.push({t:tm,c:'term'});
     var au=auHolidaysOf(y)[ds];
-    if(au) out.push({t:au,c:'au'});
+    if(au) out.push({t:au.t,s:au.s,c:'au'});
     return out;
   }
   function festHtml(ds,cls){
@@ -1513,7 +1514,7 @@
       var ds=y+'-'+pad(m+1)+'-'+pad(d);
       var isT=ds===today; var has=hasScheduleOn(ds);
       var fs=dayFestivals(ds);
-      var tag=fs.length?('<span class="cal-tag '+fs[0].c+'">'+esc(fs[0].t)+'</span>'):'';
+      var tag=fs.length?('<span class="cal-tag '+fs[0].c+'">'+esc(fs[0].s||fs[0].t)+'</span>'):'';
       var extra=(CN_OFF[ds]?' rest':'')+(CN_WORK[ds]?' workday':'');
       html+='<div class="cal-cell'+(isT?' cal-today':'')+(has?' has-ev':'')+extra+'" data-date="'+ds+'">'+
         (has?'<span class="cal-dot"></span>':'')+
