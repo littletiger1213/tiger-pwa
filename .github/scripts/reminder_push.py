@@ -142,6 +142,12 @@ def human_off(off):
 
 
 def main():
+    # 手动通道自检：Workflow 手动触发时把 test 填 1，只发一条测试推送
+    if (os.environ.get("PUSH_TEST") or "").strip() not in ("", "0", "false", "False"):
+        code, resp = bark("✅ 虎头虎脑 · 通道自检", "云端定时任务工作正常，日程提醒会按时送达。")
+        print("TEST -> %s %s" % (code, resp))
+        return 0
+
     window = int(os.environ.get("WINDOW_MIN") or 45)
     digest_hour = (os.environ.get("DIGEST_HOUR") or "8").strip().lower()
     now = datetime.now(TZ)
@@ -167,9 +173,15 @@ def main():
         sent += 1
 
     # 2) 每日行程（默认 08 点档）
-    if digest_hour != "off" and now.strftime("%H") == digest_hour.zfill(2):
+    #    在 08:00–11:59 之间任意一次运行都可补推：GitHub 的整点调度常被延迟或跳过，
+    #    只认「正好 8 点那一小时」会让汇总整天丢掉。
+    if digest_hour != "off":
+        try:
+            dh = int(str(digest_hour).strip().lstrip("0") or 0)
+        except ValueError:
+            dh = 8
         mark = "digest|" + now.strftime("%Y%m%d")
-        if mark not in state:
+        if dh <= now.hour <= dh + 3 and mark not in state:
             today = now.date()
             items = sorted({(e["start"], e["title"], e["loc"]) for e in events
                             if e["off"] == -DEFAULT_OFF_MIN and e["start"].date() == today})
