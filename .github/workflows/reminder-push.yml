@@ -2,6 +2,9 @@ name: 虎头虎脑提醒推送
 
 # 放在云端的原因：iPhone 会冻结后台网页的 JS，工作台关着就推不了。
 # 本任务每 5 分钟跑一次，读仓库里的订阅源 ICS，替工作台把提醒推到手机（Bark）。
+#   · 日程（UID sch-*）：按开始时间 + 你在工作台设的提前量（15 分钟 / 1 小时…）推送
+#   · 待办（UID todo-*）：按截止日 23:59 + 你设的提前量推送
+#   · 每天早上 08:00 档额外推一条「今日行程」汇总（含当天日程与当天到期的待办）
 # 公开仓库的标准 runner 不计费。
 
 on:
@@ -10,7 +13,11 @@ on:
   workflow_dispatch:
     inputs:
       test:
-        description: '填 1 则只发一条测试推送（不读日程）'
+        description: '填 1 则只发一条通道自检推送（不读日程）'
+        required: false
+        default: ''
+      digest:
+        description: '填 1 则立刻推一条「今日行程」汇总（自检用，不等早上 8 点）'
         required: false
         default: ''
 
@@ -33,6 +40,7 @@ jobs:
         env:
           BARK_KEY: ${{ secrets.BARK_KEY }}
           PUSH_TEST: ${{ inputs.test }}
+          FORCE_DIGEST: ${{ inputs.digest }}
         run: |
           python .github/scripts/reminder_push.py
           if [ -n "$(git status --porcelain .github/state)" ]; then
