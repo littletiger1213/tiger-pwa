@@ -1,4 +1,9 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v25：澳洲公共假日名称由中文改为**官方英文**（New Year's Day / Australia Day / Good Friday /
+ *      Easter Saturday-Sunday-Monday / Anzac Day / King's Birthday / Christmas Day / Boxing Day）。
+ *      日历格内空间约 9 字符，故另设短名（New Year / Australia / Good Fri / Easter Sat /
+ *      Easter Sun / Easter Mon / Anzac / King's / Christmas / Boxing），点某天后在「今日日程」
+ *      标题下显示的是完整英文名。同时页头副标题加了版本号（v25），便于判断是否拿到新版。
  * v24：虎序行程日历下方那一行「色块 + 标注」图例删除（用户要求）。节假日/节气/补班的格子标记本身不变，
  *      点某一天仍可在「今日日程」标题下看到当日全部标记。
  * v23：虎序行程新增三种日历标记 —— ① 中国大陆法定节假日（国务院办公厅 2026 年安排，含调休补班日）
@@ -45,7 +50,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v24';
+const CACHE = 'wb-pwa-v25';
 const ASSETS = [
   './',
   './index.html',
