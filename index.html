@@ -205,12 +205,31 @@
   /* 日程 */
   .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;width:100%;min-width:0}
   .cal-wd{text-align:center;font-size:12px;color:var(--muted);font-weight:600;padding:4px 0}
-  .cal-cell{position:relative;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;font-size:13px;border-radius:10px;background:#f8fafb;border:1px solid var(--line);cursor:pointer;min-width:0}
+  .cal-cell{position:relative;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:13px;line-height:1.1;border-radius:10px;background:#f8fafb;border:1px solid var(--line);cursor:pointer;min-width:0;padding:2px 1px;overflow:hidden}
   .cal-cell.empty{background:transparent;border:none;cursor:default}
   .cal-cell:hover{border-color:var(--teal-l)}
-  .cal-cell.cal-today{background:#eafaf7;border-color:var(--teal);font-weight:700;color:var(--teal-d)}
-  .cal-cell.has-ev{font-weight:700}
-  .cal-cell .cal-dot{position:absolute;bottom:7px;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+  .cal-cell.cal-today{background:#eafaf7;border-color:var(--teal);color:var(--teal-d)}
+  .cal-cell.cal-today .cal-num{font-weight:700}
+  .cal-cell.has-ev .cal-num{font-weight:700}
+  .cal-cell.rest .cal-num{color:var(--red);font-weight:700}
+  .cal-cell.workday .cal-num{color:#b45309}
+  .cal-cell .cal-dot{position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--teal)}
+  .cal-num{font-size:13px;line-height:1.05}
+  .cal-tag{font-size:8.5px;line-height:1.15;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .cal-tag.cn{color:var(--red)}
+  .cal-tag.term{color:var(--teal-d)}
+  .cal-tag.au{color:#b45309}
+  .cal-tag.work{color:#b45309;font-weight:500}
+  .cal-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);padding:10px 4px 0}
+  .cal-legend i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
+  .dayfest{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 10px}
+  .dayfest .f{font-size:11.5px;padding:2px 9px;border-radius:20px;line-height:1.6;font-weight:600}
+  .dayfest .f.cn{background:#fdecec;color:#b91c1c}
+  .dayfest .f.term{background:#e6f7f4;color:var(--teal-d)}
+  .dayfest .f.au{background:#fdf0e3;color:#b45309}
+  .dayfest .f.work{background:#fef6e7;color:#b45309}
+  .nodue{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);margin-top:7px;cursor:pointer;user-select:none}
+  .nodue input{width:16px;height:16px;margin:0;accent-color:var(--teal)}
   .sch-form{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
   .sch-item{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff}
   .sch-item.done{opacity:.55}
@@ -267,9 +286,11 @@
     .form-grid{grid-template-columns:1fr}
     .gold-stats{grid-template-columns:1fr 1fr}
     /* 手机端日历紧凑适配：保证网格始终收在卡片边框内 */
-    .cal-grid{gap:4px}
-    .cal-cell{font-size:12px;border-radius:8px}
-    .cal-cell .cal-dot{bottom:5px;width:4px;height:4px}
+  .cal-grid{gap:3px}
+  .cal-cell{border-radius:8px;padding:1px}
+  .cal-num{font-size:11.5px}
+  .cal-tag{font-size:7.5px}
+  .cal-cell .cal-dot{top:2px;right:2px;width:4px;height:4px}
     .card .chead #calTitle{min-width:70px;font-size:14px}
   }
 </style>
@@ -387,14 +408,15 @@
           <div data-page-node-id="895aHID3MG7DNrdiM0F2zV" class="form-grid hide" id="tForm">
             <div data-page-node-id="KZ35ZO0RTwp90RKIIncgSk" class="field" style="grid-column:1/-1"><label data-page-node-id="cOZWI49PwXA8V0P1JaL5xf"><!--pnid:xhucZlu9khLHjX7caTWGB9-->任务内容</label><input data-page-node-id="mbJVc0uRwdULoAbo1D7Jvm" id="tTitle" placeholder="要做什么？"></div>
             <div data-page-node-id="vEiexXYXlcen9FfSXD7bSB" class="field"><label data-page-node-id="4OQWbT4rsQDVVD0ICGitqx"><!--pnid:a0H34bIUY9Tj0kbVixmcc9-->轻重缓急</label><select data-page-node-id="J8XvYmy450m5loRIXLB1zn" id="tPri"><option data-page-node-id="aZQxSWuJKx1qleuYBBw70b" value="高"><!--pnid:flaXA7q5YfsArBkeEq1adh-->高（重要紧急）</option><option data-page-node-id="c9gGyDIxeXhUoQUO1s2PHL" selected value="中"><!--pnid:Fn0XuAcNTiJJvLYQkHlbDo-->中（常规）</option><option data-page-node-id="ocTvVM1yWnFisBXcs85I2l" value="低"><!--pnid:2m8d7T0pg05Z1ysYHCvmDW-->低（有空再做）</option></select></div>
-            <div data-page-node-id="XvR9IXyencXa2bOOURXF5f" class="field"><label data-page-node-id="DkOthXyC2mHBKmvf4r6VlW"><!--pnid:ZRGdnyWkIAt9ffTMrLUu2Q-->截止日期</label><input data-page-node-id="RNmB0hZ8Jztm1D5n3rshcn" id="tDue" type="date"></div>
+            <div data-page-node-id="XvR9IXyencXa2bOOURXF5f" class="field"><label data-page-node-id="DkOthXyC2mHBKmvf4r6VlW"><!--pnid:ZRGdnyWkIAt9ffTMrLUu2Q-->截止日期</label><input data-page-node-id="RNmB0hZ8Jztm1D5n3rshcn" id="tDue" type="date"><label class="nodue"><input type="checkbox" id="tNoDue">不设截止时间（长期挂着，不催不提醒）</label></div>
             <div data-page-node-id="YYuuZSGLC7W22U75O6wMOh" class="field"><label data-page-node-id="j2FnwfBLWPr7p7S423eaRo"><!--pnid:XNKnDs0fiBgY4hCMqNhNFa-->提醒</label><select data-page-node-id="1bGdeLVVjtGXkkmQHG5tD8" id="tRem"><option data-page-node-id="wNlXnIByysBy7G3YibAcGq" value="0"><!--pnid:wUR0EbBbWvlhkOQk2DqpxZ-->不提醒</option><option data-page-node-id="a4TpmFstra4nMWizZvvctN" value="5"><!--pnid:ecT2StDwE18Q9hQdnGLLHa-->提前5分钟</option><option data-page-node-id="OK3C9eTkb0uI5BaxIxbRb2" selected value="15"><!--pnid:Ys5qpip2GipnpuJLdXgnuA-->提前15分钟</option><option data-page-node-id="L5HRmZLXgsHdiJH8SeOy57" value="30"><!--pnid:kuNMBVIzEzJwlrQpFtQfwS-->提前30分钟</option><option data-page-node-id="mhqNpdT5XPylI2RzcWJpS0" value="60"><!--pnid:esx52f5O34A1gRGRahRIp6-->提前1小时</option><option data-page-node-id="d9eFUdtxEwwUFllAeeqV4q" value="120"><!--pnid:OWcZdpQojXWGNx2lC030Eb-->提前2小时</option><option data-page-node-id="mEagnSTpbhMPBl1KDPVjuy" value="1440"><!--pnid:NWlgpI7GqHDnKyW3x9ka7n-->提前1天</option></select></div>
             <div data-page-node-id="ZkYtYcogpNKdFKcvePFtLq" style="grid-column:1/-1; display:flex; gap:8px; flex-wrap:wrap"><button data-page-node-id="HtqO1CStlvl3eBUIJLOrym" class="btn" id="tAdd"><!--pnid:cf37P3hE1KExoSHZLPyjEY-->添加待办</button></div>
           </div>
         </div>
         <div data-page-node-id="4ZDxgo9N13ZuP01m4AADvD" class="card">
-          <div data-page-node-id="rKwsKJRRv2U5qYkUpSQZQl" class="chead"><h2 data-page-node-id="7Qa08dEPlfCLgQRUwiap28"><!--pnid:X5lH1oHbOXtjfyea3wCiG4-->提醒设置 · 企业微信</h2><span data-page-node-id="Djot76JOk5KwavpvCNSGLk" class="spacer"></span><button data-page-node-id="QIDsEz1niIdgCLIRiaZmcx" class="btn line sm" id="wxToggle"><!--pnid:E5RKEBrHlldfxVZJEc7gBy-->企业微信推送</button></div>
-          <div data-page-node-id="UaoM7dOUjqHCa4wE9yhpdQ" class="form-grid hide" id="wxForm">
+          <div data-page-node-id="rKwsKJRRv2U5qYkUpSQZQl" class="chead"><h2 data-page-node-id="7Qa08dEPlfCLgQRUwiap28"><!--pnid:X5lH1oHbOXtjfyea3wCiG4-->提醒设置 · 企业微信</h2><span data-page-node-id="Djot76JOk5KwavpvCNSGLk" class="spacer"></span><button data-page-node-id="QIDsEz1niIdgCLIRiaZmcx" class="btn line sm" id="wxToggle"><!--pnid:E5RKEBrHlldfxVZJEc7gBy-->展开设置</button></div>
+          <div id="remBox" class="hide">
+          <div data-page-node-id="UaoM7dOUjqHCa4wE9yhpdQ" class="form-grid" id="wxForm">
             <div data-page-node-id="ZeaFvoUh7Nnz2ZcE9kPuPP" class="field" style="grid-column:1/-1"><label data-page-node-id="hld3FFg5qFuu3OI9OxQdNu"><!--pnid:GWyeuniNgBuhbdYE0DV0zO-->企业微信群机器人 Webhook</label><input data-page-node-id="NAHuysnW0mnfpXOvsm5J6R" id="wxUrl" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxxx"></div>
             <div data-page-node-id="CP8g0DEoi21EsMIbH11EsI" class="field" style="grid-column:1/-1; display:flex; gap:8px; align-items:center; flex-wrap:wrap"><button data-page-node-id="1MXYWrtBUYv4cx3RsRH3qP" class="btn" id="wxSave"><!--pnid:DG7SimRWKV5L1JdXoU4Kxw-->保存</button><span data-page-node-id="NVHFJgTipW4VmyUsAw09bI" id="wxTip" style="color:var(--muted); font-size:12px"></span></div>
             <div data-page-node-id="5eQ1ZKNhDc3w374DRpAfoc" class="field" style="grid-column:1/-1"><span data-page-node-id="el8apQhix9yQGhCV4fP7kU" style="color:var(--muted); font-size:12px"><!--pnid:3JMbVh41MRj2Nt21FFVrcL-->在企业微信「群 → 添加群机器人」复制 Webhook 地址填入。待办/日程到点提醒时，会同步推送一条消息到该群，你微信即时收到。留空则不推送微信。</span></div>
@@ -443,9 +465,10 @@
             </div>
             <div class="field" style="grid-column:1/-1"><span id="icsTip" style="color:var(--muted); font-size:12px; line-height:1.6"></span></div>
             <div class="field" style="grid-column:1/-1"><div id="icsDirect" style="font-size:12px; line-height:1.9; color:var(--muted)"></div></div>
+            </div>
           </div>
-        </div>
-        <div data-page-node-id="ExdQYya8wLnCYPskFD9i4G" id="todoGroups"></div>
+          </div>
+          <div data-page-node-id="ExdQYya8wLnCYPskFD9i4G" id="todoGroups"></div>
       </div>
 
       <!--pnid:hcqONvFkSUoZNkBUaXyvnm--><!-- ===== Schedule view ===== -->
@@ -457,9 +480,11 @@
             <button data-page-node-id="IOaDyIKNLSFm3lj2BuM53o" class="btn line sm" id="nextMonth"><!--pnid:9LsM0dbO3fhRDdDqOHqm1x-->下月 ›</button>
           </div>
           <div data-page-node-id="5hqq3TmsmxsJdgc66yMH3Q" class="cal-grid" id="calGrid"></div>
+          <div class="cal-legend"><span><i style="background:#ef4444"></i>大陆节假日（2026）</span><span><i style="background:#0d9488"></i>节气</span><span><i style="background:#b45309"></i>澳洲公共假日</span><span><i style="background:#f59e0b"></i>调休补班</span><span><i style="background:#10b981"></i>有日程</span></div>
         </div>
         <div data-page-node-id="saMAd8kjGZKYTkEsTNUqPq" class="card">
           <div data-page-node-id="uJ3PEC8JYSVulbET5FRMJy" class="chead"><h2 data-page-node-id="EZpKrC8pQpVDqZX1IYBjds" id="schDayTitle"><!--pnid:c6nvS2EoZzc8SJ3Qo3QqUT-->今日日程</h2><span data-page-node-id="LeshPaT8AqbBSPDb4ycI3A" class="spacer"></span><button data-page-node-id="Hie5V0F0pIUFJ2oYlc24T1" class="btn sm" id="schAddToggle"><!--pnid:0QplhIn7CD7a1E0ab9nPOm-->+ 添加日程</button></div>
+          <div class="dayfest" id="dayFest"></div>
           <form data-page-node-id="zmpNZtAEjRZ3K2Ea9iEB4W" class="sch-form hide" id="schForm">
             <div data-page-node-id="6m6wKst8vsD18PZU92aVP3" class="form-grid">
               <div data-page-node-id="ryfPatWtloA7RINu4mIvNi" class="field" style="grid-column:1/-1"><label data-page-node-id="70Gcsmndw0izaqHqCwsgHo"><!--pnid:RFZcaXjSmhXtChCLZAvQLk-->事项</label><input data-page-node-id="dBkjiPtm8iVaI0KGr3eedf" id="sTitle" placeholder="要做什么？"></div>
@@ -1283,12 +1308,13 @@
 
   function renderTodos(){
     var today=todayStr();
-    var gOver=[],gToday=[],gTom=[],gWeek=[],gLater=[];
-    todosOnly().slice().sort(function(a,b){ return (a.due||'9').localeCompare(b.due||'9'); }).forEach(function(t){
+    var gOver=[],gToday=[],gTom=[],gWeek=[],gLater=[],gNone=[];
+    todosOnly().slice().sort(function(a,b){ return (a.due||'9999').localeCompare(b.due||'9999'); }).forEach(function(t){
       if(t.done) return;
       var wkStart=addDays(today,-((new Date().getDay()+6)%7));
       var wkEnd=addDays(wkStart,6);
-      if(isOverdue(t)) gOver.push(t);
+      if(!t.due) gNone.push(t);
+      else if(isOverdue(t)) gOver.push(t);
       else if(t.due===today) gToday.push(t);
       else if(t.due===addDays(today,1)) gTom.push(t);
       else if(t.due>=wkStart && t.due<=wkEnd) gWeek.push(t);
@@ -1301,6 +1327,7 @@
     html+=group('明天',gTom,'',false);
     html+=group('本周',gWeek,'',false);
     html+=group('未来',gLater,'',false);
+    html+=group('无截止 · 长期挂着',gNone,'',false);
     if(done.length) html+=group('已完成',done,'',false,true);
     $('todoGroups').innerHTML = html || '<div class="empty">还没有待办，先在上方添加一条吧。</div>';
   }
@@ -1324,7 +1351,7 @@
       '<div class="tt"><div class="title">'+esc(t.title)+'</div>'+
       '<div class="meta"><span class="pill '+PRI[t.priority].cls+'">'+t.priority+'</span>'+
       (t.due?'<span class="pill date">'+esc(fmtDate(t.due))+'</span>':'')+deferPill+
-      (function(){var er=effReminders(t,DEF_REM);return er.length?'<span class="rem">提醒：'+esc(remLabel(er[0]))+'</span>':'';})()+'</div></div>'+acts+'</div>';
+      (function(){ if(!t.due) return '<span class="rem">无截止 · 不提醒</span>'; var er=effReminders(t,DEF_REM);return er.length?'<span class="rem">提醒：'+esc(remLabel(er[0]))+'</span>':'';})()+'</div></div>'+acts+'</div>';
   }
 
   // ---------- 今日资讯渲染 ----------
@@ -1363,6 +1390,112 @@
     qaIndex=r; renderQA(); toast('换了一个新话题：'+QA[qaIndex].d);
   }
 
+  // ---------- 节假日 / 节气（全部内联，无外部依赖） ----------
+  // 中国大陆：据国务院办公厅《关于2026年部分节假日安排的通知》(2025-11-04)
+  var CN_OFF={
+    '2026-01-01':'元旦','2026-01-02':'元旦','2026-01-03':'元旦',
+    '2026-02-15':'春节','2026-02-16':'除夕','2026-02-17':'春节','2026-02-18':'春节',
+    '2026-02-19':'春节','2026-02-20':'春节','2026-02-21':'春节','2026-02-22':'春节','2026-02-23':'春节',
+    '2026-04-04':'清明','2026-04-05':'清明','2026-04-06':'清明',
+    '2026-05-01':'劳动节','2026-05-02':'劳动节','2026-05-03':'劳动节','2026-05-04':'劳动节','2026-05-05':'劳动节',
+    '2026-06-19':'端午','2026-06-20':'端午','2026-06-21':'端午',
+    '2026-09-25':'中秋','2026-09-26':'中秋','2026-09-27':'中秋',
+    '2026-10-01':'国庆','2026-10-02':'国庆','2026-10-03':'国庆','2026-10-04':'国庆',
+    '2026-10-05':'国庆','2026-10-06':'国庆','2026-10-07':'国庆'
+  };
+  // 调休补班日（这些周六/周日要上班）
+  var CN_WORK={'2026-01-04':'补班','2026-02-14':'补班','2026-02-28':'补班','2026-05-09':'补班','2026-09-20':'补班','2026-10-10':'补班'};
+  // 二十四节气：按太阳视黄经实时计算（精度约 0.02°，折合时间误差 30 分钟内）
+  var TERM_NAMES=['小寒','大寒','立春','雨水','惊蛰','春分','清明','谷雨','立夏','小满','芒种','夏至','小暑','大暑','立秋','处暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至'];
+  var TERM_LON=[285,300,315,330,345,0,15,30,45,60,75,90,105,120,135,150,165,180,195,210,225,240,255,270];
+  function jdFromDate(y,m,d,h){
+    if(m<=2){ y-=1; m+=12; }
+    var A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+    return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5+(h||0)/24;
+  }
+  function sunLon(jd){
+    var n=jd-2451545.0;
+    var L=(280.460+0.9856474*n)%360; if(L<0) L+=360;
+    var g=(357.528+0.9856003*n)%360; if(g<0) g+=360;
+    var r=g*Math.PI/180;
+    var lam=(L+1.915*Math.sin(r)+0.020*Math.sin(2*r))%360;
+    if(lam<0) lam+=360;
+    return lam;
+  }
+  function jdToYMD(jd,tzHours){
+    var t=jd+0.5+tzHours/24;
+    var z=Math.floor(t);
+    var A=z;
+    if(z>=2299161){ var al=Math.floor((z-1867216.25)/36524.25); A=z+1+al-Math.floor(al/4); }
+    var B=A+1524, C=Math.floor((B-122.1)/365.25), D=Math.floor(365.25*C), E=Math.floor((B-D)/30.6001);
+    var day=B-D-Math.floor(30.6001*E);
+    var mon=(E<14)?E-1:E-13;
+    var yr=(mon>2)?C-4716:C-4715;
+    return [yr,mon,day];
+  }
+  var _termCache={};
+  function solarTermsOf(y){
+    if(_termCache[y]) return _termCache[y];
+    var base=jdFromDate(y,1,1,0), map={};
+    for(var i=0;i<24;i++){
+      var target=TERM_LON[i];
+      var lo=base+i*15.2184-5, hi=lo+11;
+      for(var k=0;k<48;k++){
+        var mid=(lo+hi)/2;
+        var diff=((sunLon(mid)-target+540)%360)-180;
+        if(diff<0) lo=mid; else hi=mid;
+      }
+      var r=jdToYMD((lo+hi)/2,8); // 节气时刻按北京时间定日期
+      if(r[0]===y) map[r[0]+'-'+pad(r[1])+'-'+pad(r[2])]=TERM_NAMES[i];
+    }
+    _termCache[y]=map; return map;
+  }
+  // 澳大利亚全国公共假日（来源：Fair Work Ombudsman 2026 清单）
+  // 注：各州补假规则不同，此处只标法定日期本身
+  function easterSunday(y){
+    var a=y%19, b=Math.floor(y/100), c=y%100;
+    var d=Math.floor(b/4), e=b%4, f=Math.floor((b+8)/25);
+    var g=Math.floor((b-f+1)/3), h=(19*a+b-d-g+15)%30;
+    var i=Math.floor(c/4), k=c%4, l=(32+2*e+2*i-h-k)%7;
+    var m=Math.floor((a+11*h+22*l)/451);
+    return [Math.floor((h+l-7*m+114)/31), ((h+l-7*m+114)%31)+1];
+  }
+  function nthDow(y,m,n,dow){
+    var off=(dow-new Date(y,m-1,1).getDay()+7)%7;
+    return 1+off+(n-1)*7;
+  }
+  var _auCache={};
+  function auHolidaysOf(y){
+    if(_auCache[y]) return _auCache[y];
+    var m={}, put=function(mo,d,n){ m[y+'-'+pad(mo)+'-'+pad(d)]=n; };
+    put(1,1,'澳洲新年'); put(1,26,'澳洲国庆日');
+    var es=easterSunday(y), ed=new Date(y,es[0]-1,es[1]);
+    m[dateStrOf(new Date(ed.getTime()-2*86400000))]='耶稣受难日';
+    m[dateStrOf(new Date(ed.getTime()-86400000))]='复活节周六';
+    m[dateStrOf(ed)]='复活节周日';
+    m[dateStrOf(new Date(ed.getTime()+86400000))]='复活节周一';
+    put(4,25,'澳新军团日');
+    put(6,nthDow(y,6,2,1),'国王诞辰');
+    put(12,25,'澳洲圣诞节'); put(12,26,'节礼日');
+    _auCache[y]=m; return m;
+  }
+  // 某天的全部标记，按优先级：大陆节假日 > 补班 > 节气 > 澳洲
+  function dayFestivals(ds){
+    var out=[], y=Number(ds.slice(0,4));
+    if(CN_OFF[ds]) out.push({t:CN_OFF[ds],c:'cn'});
+    else if(CN_WORK[ds]) out.push({t:CN_WORK[ds],c:'work'});
+    var tm=solarTermsOf(y)[ds];
+    if(tm) out.push({t:tm,c:'term'});
+    var au=auHolidaysOf(y)[ds];
+    if(au) out.push({t:au,c:'au'});
+    return out;
+  }
+  function festHtml(ds,cls){
+    var f=dayFestivals(ds);
+    if(!f.length) return '';
+    return f.map(function(x){ return '<span class="'+(cls||'f')+' '+x.c+'">'+esc(x.t)+'</span>'; }).join('');
+  }
+
   // ---------- 日程 / 日历 ----------
   function initCalendar(){ renderCalendar(); }
   function hasScheduleOn(ds){ return schedules().some(function(s){ return dayOccurrences(s,ds).length>0; }); }
@@ -1382,7 +1515,12 @@
       if(d===null){ html+='<div class="cal-cell empty"></div>'; return; }
       var ds=y+'-'+pad(m+1)+'-'+pad(d);
       var isT=ds===today; var has=hasScheduleOn(ds);
-      html+='<div class="cal-cell'+(isT?' cal-today':'')+(has?' has-ev':'')+'" data-date="'+ds+'">'+d+(has?'<span class="cal-dot"></span>':'')+'</div>';
+      var fs=dayFestivals(ds);
+      var tag=fs.length?('<span class="cal-tag '+fs[0].c+'">'+esc(fs[0].t)+'</span>'):'';
+      var extra=(CN_OFF[ds]?' rest':'')+(CN_WORK[ds]?' workday':'');
+      html+='<div class="cal-cell'+(isT?' cal-today':'')+(has?' has-ev':'')+extra+'" data-date="'+ds+'">'+
+        (has?'<span class="cal-dot"></span>':'')+
+        '<span class="cal-num">'+d+'</span>'+tag+'</div>';
     });
     $('calGrid').innerHTML=html;
   }
@@ -1406,6 +1544,7 @@
   function renderDay(ds){
     selectedDate=ds;
     $('schDayTitle').textContent=fmtDate(ds)+' 日程';
+    var df=$('dayFest'); if(df) df.innerHTML=festHtml(ds,'f');
     var items=[];
     schedules().forEach(function(s){
       dayOccurrences(s, ds).forEach(function(dt){
@@ -2023,7 +2162,13 @@
     // 萌虎好❤情：手动换一条
     var fn=$('funNext'); if(fn) fn.addEventListener('click', function(){ initFun(true); });
     // 微信提醒设置
-    var wxT=$('wxToggle'); if(wxT) wxT.addEventListener('click',function(){ $('wxForm').classList.toggle('hide'); var u=localStorage.getItem(LS_WX); if(u) $('wxUrl').value=u; });
+    var wxT=$('wxToggle'); if(wxT) wxT.addEventListener('click',function(){
+      var box=$('remBox'); if(!box) return;
+      var willOpen=box.classList.contains('hide');
+      box.classList.toggle('hide');
+      this.textContent = willOpen ? '收起设置' : '展开设置';
+      if(willOpen){ var u=localStorage.getItem(LS_WX); if(u && $('wxUrl')) $('wxUrl').value=u; }
+    });
     var wxS=$('wxSave'); if(wxS) wxS.addEventListener('click',function(){
       var u=$('wxUrl').value.trim();
       if(!u){ $('wxTip').textContent='请输入 Webhook 地址'; return; }
@@ -2112,6 +2257,11 @@
       else if(act==='del'){ state.todos=state.todos.filter(function(t){return t.id!==id;}); persist(); renderAll(); checkBackupHint(); toast('已删除'); }
     });
 
+    var ndEl=$('tNoDue'); if(ndEl) ndEl.addEventListener('change',function(){
+      var due=$('tDue'); if(!due) return;
+      if(ndEl.checked){ due.value=''; due.disabled=true; }
+      else { due.disabled=false; }
+    });
     $('tAddToggle').addEventListener('click',function(){
       var f=$('tForm'); f.classList.toggle('hide');
       this.textContent = f.classList.contains('hide') ? '＋ 添加待办' : '收起';
@@ -2125,8 +2275,11 @@
       else { trems=[DEF_REM]; }
       if('Notification' in window && Notification.permission==='default'){ try{ Notification.requestPermission(function(){}); }catch(e){} }
       refreshNotifStatus();
-      state.todos.push({id:uid(),type:'todo',title:title,priority:$('tPri').value,due:$('tDue').value||'',reminders:trems,done:false,doneDate:null,deferred:0,createdAt:todayStr()});
-      $('tTitle').value=''; $('tDue').value=''; $('tRem').value='0';
+      var noDue=!!($('tNoDue') && $('tNoDue').checked);
+      state.todos.push({id:uid(),type:'todo',title:title,priority:$('tPri').value,due:noDue?'':($('tDue').value||''),reminders:trems,done:false,doneDate:null,deferred:0,createdAt:todayStr()});
+      $('tTitle').value=''; $('tRem').value=String(DEF_REM);
+      if($('tDue')){ $('tDue').value=''; $('tDue').disabled=false; }
+      if($('tNoDue')) $('tNoDue').checked=false;
       persist(); renderAll(); switchView('todos'); toast('已添加待办');
     });
 
