@@ -1,4 +1,9 @@
 /* 虎头虎脑工作台 Service Worker —— 离线应用外壳缓存
+ * v23：虎序行程新增三种日历标记 —— ① 中国大陆法定节假日（国务院办公厅 2026 年安排，含调休补班日）
+ *      ② 二十四节气（按太阳视黄经实时计算，24 个全部与天文年历一致）③ 澳大利亚全国公共假日
+ *      （Fair Work 2026 清单；复活节、国王诞辰等浮动日按算法推算，可覆盖任意年份）。
+ *      同时：虎程待结的「提醒设置 · 企业微信」整区改为默认收起、点击展开；
+ *      添加待办新增「不设截止时间」选项（无截止不催不提醒，单独成组）。
  * v22：⭐ 找到「Safari 能打开、日历订阅却报 cannot connect using SSL」的真正根因 —— **证书信任库**，不是网络。
  *      GitHub Pages 的证书链是  *.github.io ← Let's Encrypt YR1 ← ISRG Root YR ← ISRG Root X1。
  *      `ISRG Root YR` 是 Let's Encrypt 2025-09 才生成的「Generation Y」新根，
@@ -38,7 +43,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v22';
+const CACHE = 'wb-pwa-v23';
 const ASSETS = [
   './',
   './index.html',
