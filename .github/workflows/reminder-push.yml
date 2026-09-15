@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      test:
+        description: '填 1 则只发一条测试推送（不读日程）'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -27,6 +32,7 @@ jobs:
       - name: 推送提醒并回写状态
         env:
           BARK_KEY: ${{ secrets.BARK_KEY }}
+          PUSH_TEST: ${{ inputs.test }}
         run: |
           python .github/scripts/reminder_push.py
           if [ -n "$(git status --porcelain .github/state)" ]; then
@@ -34,5 +40,10 @@ jobs:
             git config user.email hutou-bot@users.noreply.github.com
             git add .github/state
             git commit -m "chore(reminder): 更新去重状态 [skip ci]"
-            git push
+            # 工作台保存时会往 main 推 ICS，可能正好撞上 → 拉取后重试，避免状态丢失导致重复推送
+            for i in 1 2 3; do
+              if git push origin HEAD:main; then break; fi
+              git pull --rebase --autostash origin main || true
+              sleep 3
+            done
           fi
