@@ -4,6 +4,10 @@
 读仓库根目录的订阅源 ICS（`cal-*.ics`），按每条 VALARM 的提前量算出触发时刻，
 把"刚刚到点"的提醒通过 Bark 推到手机。已推送的用 `.github/state/fired.json` 去重。
 
+订阅源里含两类事件（由工作台 `buildICS()` 生成）：
+  · UID 前缀 `sch-`  —— 日程，DTSTART = 开始时间，文案「开始」
+  · UID 前缀 `todo-` —— 待办，DTSTART = 截止日 23:59，文案「截止」
+
 放在这里而不是页面里，是为了绕开 iPhone 后台冻结网页 JS 的限制 ——
 由云端定时任务代为推送，工作台关着也能收到。
 
@@ -12,6 +16,8 @@
   BARK_SERVER  可选，默认 https://api.day.app
   DIGEST_HOUR  可选，默认 "8"，每天这个整点推一条"今日行程"；设为 "off" 关闭
   WINDOW_MIN   可选，默认 45，容忍 GitHub 调度的延迟
+  PUSH_TEST    可选，填 1 则只发一条自检推送
+  FORCE_DIGEST 可选，填 1 则立刻推一条"今日行程"（忽略 8 点档时间窗，用于自检）
 """
 import glob
 import json
@@ -30,6 +36,9 @@ except Exception:  # 极老环境兜底
 STATE_PATH = ".github/state/fired.json"
 KEEP_DAYS = 5
 DEFAULT_OFF_MIN = 15
+# 每日汇总的补推窗口（小时）。GitHub 的整点调度常被延迟或跳过，
+# 只认「正好 8 点那一小时」会让汇总整天丢掉，所以留出几小时的补推余地。
+DIGEST_GRACE_HOURS = 3
 
 
 # ---------- ICS 解析 ----------
@@ -71,6 +80,23 @@ def field(block, name):
     return m.group(1).strip() if m else ""
 
 
+def kind_of(uid, summary):
+    """判断事件类型：日程 / 待办。以工作台生成的 UID 前缀为准。"""
+    if uid.startswith("todo-"):
+        return "todo"
+    if uid.startswith("sch-"):
+        return "sch"
+    # 兜底：看标题前缀（工作台用 ⏰ 标日程、📋 标待办）
+    if summary.startswith("📋"):
+        return "todo"
+    return "sch"
+
+
+def base_uid(uid):
+    """去掉「-<off>」后缀，得到"同一条提醒"的稳定标识（同一条会有多档提前量）。"""
+    return re.sub(r"-\d+(?=@|$)", "", uid)
+
+
 def load_events():
     files = sorted(glob.glob("cal-*.ics")) or sorted(glob.glob("*.ics"))
     events = []
@@ -80,14 +106,18 @@ def load_events():
             start = parse_dt(field(block, "DTSTART"))
             if not start:
                 continue
+            summary = field(block, "SUMMARY") or "(无标题)"
+            uid = field(block, "UID") or summary
             offs = [o for o in (parse_offset(v) for v in re.findall(r"^TRIGGER[^:\n]*:([^\n]+)", block, re.M)) if o is not None]
             if not offs:
                 offs = [-DEFAULT_OFF_MIN]
             for off in sorted(set(offs)):
                 events.append({
                     "file": path,
-                    "uid": field(block, "UID") or field(block, "SUMMARY"),
-                    "title": field(block, "SUMMARY") or "(无标题)",
+                    "uid": uid,
+                    "key": base_uid(uid),
+                    "kind": kind_of(uid, summary),
+                    "title": summary,
                     "loc": field(block, "LOCATION"),
                     "start": start,
                     "off": off,
@@ -133,18 +163,67 @@ def bark(title, body, group="虎头虎脑"):
 
 
 def human_off(off):
+    """把有符号偏移说成人话：-15 → 提前 15 分钟。"""
     off = -off
     if off <= 0:
         return "到点提醒"
+    if off % 1440 == 0:
+        return "提前 %d 天" % (off // 1440)
     if off % 60 == 0:
         return "提前 %d 小时" % (off // 60)
     return "提前 %d 分钟" % off
 
 
+def push_title(ev):
+    """工作台生成的标题本身就带 emoji 前缀（⏰/📋），别再叠一层。"""
+    t = ev["title"]
+    if t[:1] in ("⏰", "📋", "📌", "⏳", "🔔"):
+        return t
+    return ("⏰ " if ev["kind"] == "sch" else "📋 ") + t
+
+
+def reminder_body(ev):
+    """按类型生成提醒正文：日程说「开始」，待办说「截止」。"""
+    when = ev["start"].strftime("%m月%d日 %H:%M")
+    when_dm = ev["start"].strftime("%m月%d日")
+    when_hm = ev["start"].strftime("%H:%M")
+    lines = []
+    if ev["kind"] == "todo":
+        lines.append("截止 %s · %s" % (when_dm, human_off(ev["off"])))
+        lines.append("（截止时刻 23:59）")
+    else:
+        lines.append("%s 开始 · %s" % (when_hm, human_off(ev["off"])))
+        lines.append("（%s）" % when_dm)
+    if ev["loc"]:
+        lines.append("地点：" + ev["loc"])
+    return "\n".join(lines)
+
+
+def digest_lines(events, today):
+    """今日行程：当天的日程 + 当天到期的待办，同一条只出现一次。"""
+    rows = {}
+    for e in events:
+        if e["start"].date() != today:
+            continue
+        # 同一条提醒可能有多档提前量 → 按 (类型, key) 去重，取最靠前的那次，避免重复列
+        k = (e["kind"], e["key"])
+        if k not in rows or e["start"] < rows[k]["start"]:
+            rows[k] = e
+    sch = sorted((e for e in rows.values() if e["kind"] == "sch"), key=lambda e: e["start"])
+    todo = sorted((e for e in rows.values() if e["kind"] == "todo"), key=lambda e: e["start"])
+    lines = []
+    for e in sch:
+        lines.append("%s %s%s" % (e["start"].strftime("%H:%M"), e["title"],
+                                 ("（" + e["loc"] + "）") if e["loc"] else ""))
+    for e in todo:
+        lines.append("截止 %s" % e["title"])
+    return lines, len(sch), len(todo)
+
+
 def main():
     # 手动通道自检：Workflow 手动触发时把 test 填 1，只发一条测试推送
     if (os.environ.get("PUSH_TEST") or "").strip() not in ("", "0", "false", "False"):
-        code, resp = bark("✅ 虎头虎脑 · 通道自检", "云端定时任务工作正常，日程提醒会按时送达。")
+        code, resp = bark("✅ 虎头虎脑 · 通道自检", "云端定时任务工作正常，日程与待办提醒会按时送达。")
         print("TEST -> %s %s" % (code, resp))
         return 0
 
@@ -155,7 +234,7 @@ def main():
     state = load_state()
     sent = 0
 
-    # 1) 到点提醒
+    # 1) 到点提醒（日程 + 待办，按各自在工作台里设的提前量）
     lo = now - timedelta(minutes=window)
     for ev in sorted(events, key=lambda e: e["fire"]):
         fire = ev["fire"]
@@ -164,33 +243,29 @@ def main():
         mark = "%s|%s" % (ev["uid"], fire.strftime("%Y%m%dT%H%M"))
         if mark in state:
             continue
-        body = "%s 开始（%s）" % (ev["start"].strftime("%m月%d日 %H:%M"), human_off(ev["off"]))
-        if ev["loc"]:
-            body += "\n地点：" + ev["loc"]
-        code, resp = bark("⏰ " + ev["title"], body)
-        print("PUSH %s -> %s %s" % (ev["title"], code, resp))
+        code, resp = bark(push_title(ev), reminder_body(ev))
+        print("PUSH [%s] %s -> %s %s" % (ev["kind"], ev["title"], code, resp))
         state[mark] = now.strftime("%Y%m%d%H%M")
         sent += 1
 
-    # 2) 每日行程（默认 08 点档）
-    #    在 08:00–11:59 之间任意一次运行都可补推：GitHub 的整点调度常被延迟或跳过，
-    #    只认「正好 8 点那一小时」会让汇总整天丢掉。
-    if digest_hour != "off":
+    # 2) 每日行程（默认 08:00 档；整点调度被延迟时在窗口内补推）
+    forced = (os.environ.get("FORCE_DIGEST") or "").strip() not in ("", "0", "false", "False")
+    if digest_hour != "off" or forced:
         try:
             dh = int(str(digest_hour).strip().lstrip("0") or 0)
         except ValueError:
             dh = 8
         mark = "digest|" + now.strftime("%Y%m%d")
-        if dh <= now.hour <= dh + 3 and mark not in state:
-            today = now.date()
-            items = sorted({(e["start"], e["title"], e["loc"]) for e in events
-                            if e["off"] == -DEFAULT_OFF_MIN and e["start"].date() == today})
-            if items:
-                body = "\n".join("· %s %s%s" % (s.strftime("%H:%M"), t, ("（" + l + "）") if l else "")
-                                 for s, t, l in items)
+        if (forced or dh <= now.hour <= dh + DIGEST_GRACE_HOURS) and mark not in state:
+            lines, n_sch, n_todo = digest_lines(events, now.date())
+            if lines:
+                head = "🌤 今日行程 %d 项" % len(lines)
+                if n_todo:
+                    head = "🌤 今日行程 %d 项（日程 %d · 待办 %d）" % (len(lines), n_sch, n_todo)
+                body = "\n".join(lines)
             else:
-                body = "今天没有安排，好好休息。"
-            code, resp = bark("🌤 今日行程 %d 项" % len(items), body)
+                head, body = "🌤 今日行程", "今天没有安排，好好休息。"
+            code, resp = bark(head, body)
             print("DIGEST -> %s %s" % (code, resp))
             state[mark] = now.strftime("%Y%m%d%H%M")
             sent += 1
