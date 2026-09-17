@@ -50,7 +50,7 @@
  * 后续所有修复（含虎略财讯数据源）用户一律拿不到。
  * 切记：每次发版都要 bump 下面的 CACHE 版本号。
  */
-const CACHE = 'wb-pwa-v25';
+const CACHE = 'wb-pwa-v26';
 const ASSETS = [
   './',
   './index.html',
