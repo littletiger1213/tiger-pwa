@@ -300,7 +300,7 @@
   <aside data-page-node-id="XPJErTtPLcajkg7Vxfux5S" class="sidebar">
     <div data-page-node-id="e1Ghq7dX3BJEAlGPjRO9rN" class="brand">
       <svg data-page-node-id="Crrjnmwt2sdZg7gUxHtkOm" class="logo" fill="none" viewBox="0 0 40 40"><rect data-page-node-id="kDo3af8m2sTFB1RoiEOfpu" fill="#0d9488" height="34" rx="9" width="34" x="3" y="3"/><path data-page-node-id="ciFMqqdbfKhWbX53e8yFXP" d="M12 21l5 5 11-12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/></svg>
-      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v25</small></div>
+      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v26</small></div>
     </div>
     <button data-page-node-id="2DPFX9unuWHNuQESBnA4YZ" class="nav-btn active" data-view="overview"><svg data-page-node-id="YzMQVSqwnPKSaeUzKTWHmr" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="B5NP4vaTKgXcRFahWYZofp" d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ymGy366oh6zu1hKGr24Dh4-->智虎驾驶舱</button>
     <div data-page-node-id="saXsbrEf8pdwORQw5yyQ0r" class="nav-subs" id="navSubs">
@@ -828,12 +828,13 @@
   function renderMarket(m){
     var html='<div class="mkt-grid">';
     m.groups.forEach(function(g){
-      html+='<div class="mkt-group"><h3>'+esc(g.title)+'</h3><table class="mkt-table"><thead><tr><th>指标</th><th>最新</th><th>当日涨跌</th><th>年初至今</th><th>数据时间</th></tr></thead><tbody>';
+      var showYtd = (g.key!=='ash'); // A股重要指数不显示「年初至今」列
+      html+='<div class="mkt-group"><h3>'+esc(g.title)+'</h3><table class="mkt-table"><thead><tr><th>指标</th><th>最新</th><th>当日涨跌</th>'+(showYtd?'<th>年初至今</th>':'')+'<th>数据时间</th></tr></thead><tbody>';
       orderedRows(g).forEach(function(r){
         html+='<tr><td class="mkt-name"><span class="mvs-wrap"><button class="mvs" data-mv="up" data-g="'+g.key+'" data-k="'+r.key+'" title="上移">▲</button><button class="mvs" data-mv="down" data-g="'+g.key+'" data-k="'+r.key+'" title="下移">▼</button></span><span class="mn">'+esc(r.n)+(r.tag?'<span class="tag">'+esc(r.tag)+'</span>':'')+'</span></td>'+
           '<td>'+(r.v==null||r.v===''?'——':esc(r.v)+(r.unit?'<span class="tag">'+esc(r.unit)+'</span>':''))+'</td>'+
           '<td class="'+chgCls(r.d)+'">'+fmtPct(r.d)+'</td>'+
-          '<td class="'+chgCls(r.ytd)+'">'+fmtPct(r.ytd)+'</td>'+
+          (showYtd?'<td class="'+chgCls(r.ytd)+'">'+fmtPct(r.ytd)+'</td>':'')+
           '<td class="tm">'+(r.t==null||r.t===''?'——':esc(r.t))+'</td></tr>';
       });
       html+='</tbody></table></div>';
