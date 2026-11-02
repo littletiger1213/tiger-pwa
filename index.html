@@ -245,7 +245,7 @@
   .fun-card{padding:18px}
   .fun-body{font-size:15px;line-height:1.75;padding:2px 2px}
   .fun-a{padding:3px 0}
-  .fun-a+.fun-a{margin-top:7px;padding-top:7px;border-top:1px dashed rgba(0,0,0,.09)}
+  .fun-a+.fun-a{margin-top:10px}
   .fun-note{font-size:12.5px;color:var(--muted);margin-top:6px}
 
   /* toast & banner */
@@ -259,6 +259,10 @@
   .hide{display:none!important}
   /* 主屏幕仅隐藏同步状态（离线托管下无意义）；导出备份/导入必须保留，是数据兜底出口 */
   #sync{display:none!important}
+
+  /* 导出/导入：页面最底部的备份出口 */
+  .foot-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+  @media(max-width:768px){.foot-actions .btn{flex:1;justify-content:center}}
 
   /* mobile */
   .bottombar{display:none}
@@ -300,7 +304,7 @@
   <aside data-page-node-id="XPJErTtPLcajkg7Vxfux5S" class="sidebar">
     <div data-page-node-id="e1Ghq7dX3BJEAlGPjRO9rN" class="brand">
       <svg data-page-node-id="Crrjnmwt2sdZg7gUxHtkOm" class="logo" fill="none" viewBox="0 0 40 40"><rect data-page-node-id="kDo3af8m2sTFB1RoiEOfpu" fill="#0d9488" height="34" rx="9" width="34" x="3" y="3"/><path data-page-node-id="ciFMqqdbfKhWbX53e8yFXP" d="M12 21l5 5 11-12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/></svg>
-      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v28</small></div>
+      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v29</small></div>
     </div>
     <button data-page-node-id="2DPFX9unuWHNuQESBnA4YZ" class="nav-btn active" data-view="overview"><svg data-page-node-id="YzMQVSqwnPKSaeUzKTWHmr" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="B5NP4vaTKgXcRFahWYZofp" d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ymGy366oh6zu1hKGr24Dh4-->智虎驾驶舱</button>
     <div data-page-node-id="saXsbrEf8pdwORQw5yyQ0r" class="nav-subs" id="navSubs">
@@ -323,8 +327,6 @@
       </div>
       <div data-page-node-id="n0cTDOjY9QztWhaRn8ussY" class="spacer"></div>
       <span data-page-node-id="Va1vUvoDWByxNlKyS1VR49" class="sync" id="sync"><span data-page-node-id="kBT7KoabAHQT4fznwr0n4J" class="dot"></span><span data-page-node-id="toq3bF5FXPl3YQ6XvPSBEj" id="syncText"><!--pnid:IauoHiVYfZr1ITlHhTMrJ0-->已同步</span></span>
-      <button data-page-node-id="srEWCWWBuMNuuTqhsZAvMz" class="btn line sm" id="btnExport"><!--pnid:AMSfTUUFKWonNDyFWD7HtL-->导出备份</button>
-      <button data-page-node-id="rDuovrdoutCBwe3GPPALK9" class="btn line sm" id="btnImport"><!--pnid:rX23w81YYRWKJxx4wN587x-->导入</button>
       <input data-page-node-id="79yVmB4uLcVMO3CP9TFITj" accept="application/json" class="hide" id="fileInput" type="file">
     </div>
 
@@ -393,9 +395,6 @@
           </div>
           </div>
         </div>
-        <div data-page-node-id="bhiOGmub0i6d7yuQU4ayxv" style="margin-top:16px">
-          <button data-page-node-id="5beFBshtxxjVPmVNPXzOS9" class="btn line sm" id="btnClearSample"><!--pnid:LAnJqZuvONkdwmWU0c0PKJ-->清空示例</button>
-        </div>
       </div>
 
       <!--pnid:bfdFE5FySMnjiP1IL5Zp5f--><!-- ===== Todos view ===== -->
@@ -410,7 +409,7 @@
             <div data-page-node-id="ZkYtYcogpNKdFKcvePFtLq" style="grid-column:1/-1; display:flex; gap:8px; flex-wrap:wrap"><button data-page-node-id="HtqO1CStlvl3eBUIJLOrym" class="btn" id="tAdd"><!--pnid:cf37P3hE1KExoSHZLPyjEY-->添加待办</button></div>
           </div>
         </div>
-        <div data-page-node-id="4ZDxgo9N13ZuP01m4AADvD" class="card">
+        <div data-page-node-id="4ZDxgo9N13ZuP01m4AADvD" class="card hide">
           <div data-page-node-id="rKwsKJRRv2U5qYkUpSQZQl" class="chead"><h2 data-page-node-id="7Qa08dEPlfCLgQRUwiap28"><!--pnid:X5lH1oHbOXtjfyea3wCiG4-->提醒设置 · 企业微信</h2><span data-page-node-id="Djot76JOk5KwavpvCNSGLk" class="spacer"></span><button data-page-node-id="QIDsEz1niIdgCLIRiaZmcx" class="btn line sm" id="wxToggle"><!--pnid:E5RKEBrHlldfxVZJEc7gBy-->展开设置</button></div>
           <div id="remBox" class="hide">
           <div data-page-node-id="UaoM7dOUjqHCa4wE9yhpdQ" class="form-grid" id="wxForm">
@@ -502,6 +501,10 @@
         </div>
       </div>
 
+      <div class="foot-actions">
+        <button class="btn line sm" id="btnExport">导出备份</button>
+        <button class="btn line sm" id="btnImport">导入</button>
+      </div>
     </div>
   </div>
 </div>
@@ -836,7 +839,7 @@
       });
       html+='</tbody></table></div>';
     });
-    html+='</div><div class="gold-note">'+m.note+'</div>';
+    html+='</div>';
     $('marketPanel').innerHTML=html;
   }
   function todayMMDD(){ var d=new Date(); return pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -2286,7 +2289,7 @@
     $('fileInput').addEventListener('change',importData);
     $('qaNext').addEventListener('click',nextQA);
     $('histNext').addEventListener('click',histNext);
-    $('btnClearSample').addEventListener('click',clearSamples);
+    var bcs=$('btnClearSample'); if(bcs) bcs.addEventListener('click',clearSamples);
     var nb=$('newsLayout');
     nb.textContent = NEWS_LAYOUT==='row' ? '竖排' : '横排';
     nb.addEventListener('click',function(){
