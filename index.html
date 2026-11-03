@@ -109,6 +109,11 @@
   .att-row.ok .ico{color:var(--green)}
   .att-row.ok .body .t{color:#065f46}
   .att-row.ok .body .m{color:#047857}
+  .att-row.done{background:#f8fafc;border-color:#e5e7eb}
+  .att-row.done .ico{color:#9ca3af}
+  .att-row.done .body .t{font-weight:500;color:#9aa5b1;text-decoration:line-through;text-decoration-color:#9aa5b1;text-decoration-thickness:1.5px}
+  .att-row.done .body .m{color:#aab3bd}
+  .att-done-tag{font-size:12px;font-weight:600;color:#0d9488;white-space:nowrap}
   .att-empty{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:14px;padding:10px;border:1px dashed var(--line);border-radius:10px;background:#fafdfc}
   .att-empty svg{width:22px;height:22px;color:var(--green)}
 
@@ -243,7 +248,7 @@
 
   .empty{text-align:center;color:var(--muted);padding:30px 10px;font-size:14px}
 
-  /* 萌虎好❤情（宽度与其它卡片一致） */
+  /* To 小虎 ❤（宽度与其它卡片一致） */
   .fun-card{padding:18px}
   .fun-body{font-size:15px;line-height:1.75;padding:2px 2px}
   /* 两条之间不留额外间距，靠 line-height 自然分行（= 一句话内第 2 行与第 1 行的间距） */
@@ -282,7 +287,7 @@
     .mkt-grid{grid-template-columns:1fr}
     .news-hc{flex:1 1 100%}
     .bottombar{display:flex;position:fixed;bottom:0;left:0;right:0;background:#0f2e2b;z-index:50;padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
-    .bottombar .nav-btn{flex-direction:column;gap:3px;padding:6px 4px;font-size:10.5px;border-radius:10px;min-height:auto}
+    .bottombar .nav-btn{flex-direction:column;justify-content:center;gap:3px;padding:6px 4px;font-size:10.5px;border-radius:10px;min-height:auto;line-height:1.2}
     .bottombar .nav-btn svg{width:22px;height:22px}
     .bottombar .nav-btn .badge{position:absolute;top:2px;right:50%;transform:translateX(22px)}
     .bottombar .nav-btn{position:relative}
@@ -306,7 +311,7 @@
   <aside data-page-node-id="XPJErTtPLcajkg7Vxfux5S" class="sidebar">
     <div data-page-node-id="e1Ghq7dX3BJEAlGPjRO9rN" class="brand">
       <svg data-page-node-id="Crrjnmwt2sdZg7gUxHtkOm" class="logo" fill="none" viewBox="0 0 40 40"><rect data-page-node-id="kDo3af8m2sTFB1RoiEOfpu" fill="#0d9488" height="34" rx="9" width="34" x="3" y="3"/><path data-page-node-id="ciFMqqdbfKhWbX53e8yFXP" d="M12 21l5 5 11-12" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"/></svg>
-      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v33</small></div>
+      <div data-page-node-id="dWBKcG5OaBXmvy12QW9DgJ"><b data-page-node-id="Nw27ppy2wgASfo7R9UkFDK"><!--pnid:PiZcdNtdFevjvccG4lgJXP-->虎头虎脑工作台</b><small data-page-node-id="A4LGwPIA6b4zF6CZPxKqnO"><!--pnid:zyrkRFCM2pOiBG5kbs2L2R-->王小虎 · 个人工作台 · v34</small></div>
     </div>
     <button data-page-node-id="2DPFX9unuWHNuQESBnA4YZ" class="nav-btn active" data-view="overview"><svg data-page-node-id="YzMQVSqwnPKSaeUzKTWHmr" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="B5NP4vaTKgXcRFahWYZofp" d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ymGy366oh6zu1hKGr24Dh4-->智虎驾驶舱</button>
     <div data-page-node-id="saXsbrEf8pdwORQw5yyQ0r" class="nav-subs" id="navSubs">
@@ -316,7 +321,7 @@
       <button data-page-node-id="wDF4mDmBrlrhuTl4TmGTCD" class="nav-sub" data-scroll="sec-hist"><!--pnid:pjmyhSzgeNutGHZlVtE2PR-->虎迹溯古</button>
       <button data-page-node-id="qTnGWCKvyQtF8ZWi5jRz5n" class="nav-sub" data-scroll="sec-qa"><!--pnid:rxOVXZxearh6Kj09ayAGAi-->虎研探问</button>
     </div>
-    <button data-page-node-id="p0WM5uBCbVdP1LS6rrXGQP" class="nav-btn" data-view="todos"><svg data-page-node-id="gdoKkNbjthRIGWiiLlcqMg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="D5huH492HZz7ImqyRAqC6R" d="M9 11l3 3 8-8M3 12l3 3 3-3M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:MzAp0NuzoU0fwoy6gJPMUP-->虎虎今日事<span data-page-node-id="18gRKwvH12TGcme8CtkDLT" class="badge hide" id="navAtt"></span></button>
+    <button data-page-node-id="p0WM5uBCbVdP1LS6rrXGQP" class="nav-btn" data-view="todos"><svg data-page-node-id="gdoKkNbjthRIGWiiLlcqMg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="D5huH492HZz7ImqyRAqC6R" d="M9 11l3 3 8-8M3 12l3 3 3-3M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:MzAp0NuzoU0fwoy6gJPMUP-->虎虎代办<span data-page-node-id="18gRKwvH12TGcme8CtkDLT" class="badge hide" id="navAtt"></span></button>
     <button data-page-node-id="WzVgMkv1V3jpNQyrQOJdbK" class="nav-btn nav-sch" data-view="schedule"><svg data-page-node-id="pDiaaI3yJChnAl5S82CRVJ" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect data-page-node-id="l6K1FT9n191BN5Ho0JHml6" height="17" rx="2" width="18" x="3" y="4"/><path data-page-node-id="LgiNruKuNcQsKQVNmIKDzn" d="M3 9h18M8 2v4M16 2v4M8 14h3" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:T5QS9oRQOJsoMrbiLfuuR7-->MasterTiger<br>日程<span data-page-node-id="MxKb4oj4qOpq7CvTQ1plWb" class="badge hide" id="navSch"></span></button>
     <div data-page-node-id="V4YTOqcWZWaqkYlz00tcw3" class="side-foot"><!--pnid:lEjaGhwmP9kEMC436YckXy-->数据存于资料库在线表<br data-page-node-id="lprC26e4ZTDIJ4BiSTdenJ"><!--pnid:4V3cdiB0czQCy8zTIrw3B8-->断网自动转本地缓存</div>
   </aside>
@@ -355,15 +360,15 @@
         <button data-page-node-id="e3NGv3wRRyWp1ozBDXnBSz" class="btn line sm" id="bkDismiss"><!--pnid:myz4G4ggvvWZTTYRGnro6x-->知道了</button>
       </div>
 
-      <!--pnid:rwPZB9B4jbbnJ0pSbojagi--><!-- 萌虎好❤情 -->
+      <!--pnid:rwPZB9B4jbbnJ0pSbojagi--><!-- To 小虎 ❤ -->
       <div data-page-node-id="JlINeZky2ZjbTqCRpzU9BW" class="card fun-card" id="sec-fun">
-        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->萌虎好❤情</h2><span class="spacer"></span><button class="btn line sm" id="funNext">换一条</button></div>
+        <div data-page-node-id="YAKdqvLm5aitUWWBPKqLjL" class="chead"><h2 data-page-node-id="c4p0BxWMTeXuZA7UPKaSRO"><!--pnid:tKLPuBNta06Ni5yTAAliKt-->To 小虎 ❤</h2><span class="spacer"></span><button class="btn line sm" id="funNext">换一条</button></div>
         <div data-page-node-id="R7hhwCsjJGAKoudyCh2ufs" class="fun-body" id="funBody"></div>
       </div>
 
       <!--pnid:ZgfdLdzZa4CFNKCBdOyW4d--><!-- TODAY ATTENTION (always on top) -->
       <section data-page-node-id="Dy71gyvyR46cRyzmMbv2LO" class="attention" id="attention">
-        <h3 data-page-node-id="36bEMCJ3p6QeAZBIUlvSnS"><svg data-page-node-id="XDcmS6zmnKk79SRwU5L42M" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="85zI6ug8feBmYamRvF07W4" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:9MTTSFqKbl9dngASioj0la-->今日虎职</h3>
+        <h3 data-page-node-id="36bEMCJ3p6QeAZBIUlvSnS"><svg data-page-node-id="XDcmS6zmnKk79SRwU5L42M" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="85zI6ug8feBmYamRvF07W4" d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:9MTTSFqKbl9dngASioj0la-->虎虎今日事</h3>
         <div data-page-node-id="y842YizwDCqh9TvKcSZztx" id="attList"></div>
       </section>
 
@@ -514,7 +519,7 @@
 <!--pnid:aLHwWWRCBz9lKDDPm7li6o--><!-- Bottom bar (mobile) -->
 <nav data-page-node-id="H9vBWgaqbu4p2zxubxnUrG" class="bottombar">
   <button data-page-node-id="UVH4hAoTLdVxcmf9jjmKT2" class="nav-btn active" data-view="overview"><svg data-page-node-id="LLeDI2jCzT752d56BIgj7S" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="VAyDZXxJkW0n7oyMBozW6J" d="M3 12l9-9 9 9M5 10v10h14V10" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:yTdbJ7phYjBPfvEYeIOt8E-->智虎驾驶舱</button>
-  <button data-page-node-id="7ldqKmUouU2UdVuOsmeFbJ" class="nav-btn" data-view="todos"><svg data-page-node-id="CgtD4KbESggKaNM45axSER" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="SGDEpiABKdQK4ig0NFSgnR" d="M9 11l3 3 8-8M3 12l3 3 3-3M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ejYi3pTtVeVkenHEeylnUd-->虎虎今日事</button>
+  <button data-page-node-id="7ldqKmUouU2UdVuOsmeFbJ" class="nav-btn" data-view="todos"><svg data-page-node-id="CgtD4KbESggKaNM45axSER" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path data-page-node-id="SGDEpiABKdQK4ig0NFSgnR" d="M9 11l3 3 8-8M3 12l3 3 3-3M3 6h18M3 18h18" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:ejYi3pTtVeVkenHEeylnUd-->虎虎代办</button>
   <button data-page-node-id="vx21gNbKh3UfbfYIDxp51J" class="nav-btn nav-sch" data-view="schedule"><svg data-page-node-id="LQqRlbqMcEb0JhtKzLPcmH" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect data-page-node-id="ZDw0LiIrLQGX3o10AAfEBI" height="17" rx="2" width="18" x="3" y="4"/><path data-page-node-id="SEjZruFurHDKEDG2DB64wd" d="M3 9h18M8 2v4M16 2v4M8 14h3" stroke-linecap="round" stroke-linejoin="round"/></svg><!--pnid:V9Hi6iwkMs9onr9Tmc2B6e-->MasterTiger<br>日程</button>
 </nav>
 
@@ -1118,7 +1123,7 @@
     }
   }
 
-  // ---------- 萌虎好❤情：每天联网更新 1~2 句正能量 / 有哲理的话（无内置语料）----------
+  // ---------- To 小虎 ❤：每天联网更新 1~2 句正能量 / 有哲理的话（无内置语料）----------
   // 源：一言(hitokoto) 的 哲学/诗词/文学/原创 四类 + 今日诗词(jinrishici)。
   //     均实测 CORS 开放、免密钥、国内可达；弃用 动画/其他 两类（日漫台词、歌词、网络梗占比过高）。
   // 思路：不用关键词判断「情绪」——误杀率太高，会把「为学日益，为道日损」这类文言哲理句全部杀掉。
@@ -1270,30 +1275,47 @@
     deferredTodos().forEach(function(t){
       rows.push({kind:'todo', title:t.title, meta:'逾期任务 · 截止 '+fmtDate(t.due)+(t.deferred?(' · 已顺延 '+t.deferred+' 次'):''), id:t.id});
     });
-    // 日程：今天的发生——已开始未完成 → 标红；2 小时内即将开始 → 标绿
     var now=Date.now(); var today=todayStr();
+    var doneRows=[]; // 今天已完成的项：不消失，排在列表末尾划线显示
+    // 日程：今天的发生——已开始未完成 → 标红；2 小时内即将开始 → 标绿
     schedules().forEach(function(s){
-      if(s.done) return;
       var tods=dayOccurrences(s, today);
-      if(!tods.length || doneDate(s, today)) return;
+      if(!tods.length) return;
+      var loc=s.location?(' · '+s.location):''; var rl=repeatLabel(s);
+      if(doneDate(s, today)){
+        doneRows.push({kind:'done', title:s.title, meta:'已完成 · '+fmtTime(tods[0])+loc+rl, id:s.id});
+        return;
+      }
       var ev=new Date(tods[0]).getTime();
       if(isNaN(ev)) return;
-      var loc=s.location?(' · '+s.location):''; var rl=repeatLabel(s);
       if(ev < now){
         rows.push({kind:'sch-over', title:s.title, meta:'已开始 · '+fmtTime(tods[0])+loc+rl, id:s.id, ds:today});
       } else if(ev-now <= 120*60000){
         rows.push({kind:'sch-up', title:s.title, meta:'即将开始（2小时内） · '+fmtTime(tods[0])+loc+rl, id:s.id, ds:today});
       } else {
-        // 当天、尚未开始（>2小时）的日程也自动进入今日虎职
+        // 当天、尚未开始（>2小时）的日程也自动进入虎虎今日事
         rows.push({kind:'sch-plan', title:s.title, meta:'今日日程 · '+fmtTime(tods[0])+loc+rl, id:s.id, ds:today});
       }
     });
+    // 今天勾完的逾期任务：同样留在列表里划线显示
+    todosOnly().forEach(function(t){
+      if(t.done && t.doneDate===today && t.due && t.due < today){
+        doneRows.push({kind:'done', title:t.title, meta:'已完成 · 截止 '+fmtDate(t.due), id:t.id});
+      }
+    });
+    rows=rows.concat(doneRows);
     if(!rows.length){
       list.innerHTML='<div class="att-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg>今天清爽，没有逾期任务、也没有临期日程。</div>';
       return;
     }
     var html='';
     rows.forEach(function(r){
+      if(r.kind==='done'){
+        html+='<div class="att-row done"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4 10-10" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+          '<div class="body"><div class="t">'+esc(r.title)+'</div><div class="m">'+esc(r.meta)+'</div></div>'+
+          '<div class="act"><span class="att-done-tag">已完成</span></div></div>';
+        return;
+      }
       var isSch=(r.kind==='sch-over'||r.kind==='sch-up');
       var acts = isSch
         ? '<button class="mini" data-act="goto-sch" data-id="'+r.id+'">去日程</button><button class="mini" data-act="done" data-id="'+r.id+'"'+(r.ds?(' data-ds="'+r.ds+'"'):'')+'>完成</button>'
@@ -2140,10 +2162,10 @@
   }
 
   // ---------- nav ----------
-  var TITLES={overview:['智虎驾驶舱','今日虎职 · 虎啸速报 · 虎略财讯 · 虎迹溯古 · 虎研探问'],todos:['虎虎今日事','填任务、选轻重缓急、设截止日，做完打勾'],schedule:['MasterTiger日程','按日历添加，到点自动提醒']};
+  var TITLES={overview:['智虎驾驶舱','虎虎今日事 · 虎啸速报 · 虎略财讯 · 虎迹溯古 · 虎研探问'],todos:['虎虎代办','填任务、选轻重缓急、设截止日，做完打勾'],schedule:['MasterTiger日程','按日历添加，到点自动提醒']};
   function switchView(v){
     activeView=v;
-    // 「今日虎职」只在智虎驾驶舱、虎虎今日事显示；MasterTiger日程页不显示
+    // 「虎虎今日事」区块只在智虎驾驶舱、虎虎代办两个视图显示；MasterTiger日程页不显示
     var att=document.getElementById('attention');
     if(att) att.classList.toggle('hide', v==='schedule');
     document.querySelectorAll('.nav-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-view')===v); });
@@ -2163,7 +2185,7 @@
   function bindEvents(){
     // 待办提醒默认跟随日程：提前15分钟（平台发布会剥离 HTML selected，故用 JS 设定）
     try{ var tr=$('tRem'); if(tr && !tr.value) tr.value='15'; }catch(e){}
-    // 萌虎好❤情：手动换一条
+    // To 小虎 ❤：手动换一条
     var fn=$('funNext'); if(fn) fn.addEventListener('click', function(){ initFun(true); });
     // 微信提醒设置
     var wxT=$('wxToggle'); if(wxT) wxT.addEventListener('click',function(){
